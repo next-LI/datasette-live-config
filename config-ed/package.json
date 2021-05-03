@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "umd:main": "dist/index.umd.js",
   "module": "dist/index.m.js",
-  "source": "components/hello-world/index.js",
+  "source": "components/config/index.js",
   "scripts": {
     "test": "NODE_ENV=test jest",
     "build": "preact build --no-prerender --clean --template src/index.ejs --service-worker false && cp -rf build/* ../datasette_git_importer/static/ && mv ../datasette_git_importer/static/index.html ../datasette_git_importer/templates/git_importer.html",
@@ -13,7 +13,7 @@
     "dev": "preact watch --template src/index.ejs"
   },
   "keywords": [],
-  "author": "Zouhir <zouhir@zouhir.org>",
+  "author": "Brandon Roberts <brandon@bxroberts.org>",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^4.5.0",

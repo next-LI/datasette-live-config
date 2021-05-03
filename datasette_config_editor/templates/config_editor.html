@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Datasette Configuration Editor{% endblock %}
+
+{% block extra_head %}
+{# TODO: use a package manager to manage these deps #}
+<!--<link rel="stylesheet" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap.css">-->
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+<style>
+._jsonform-array-ul li {
+  margin: 20px;
+  border: 1px dashed #ddd;
+  padding: 20px;
+}
+.controls {
+  display: flex;
+  flex-flow: column-reverse wrap;
+}
+.expandable > legend:before {
+    content: '\25B8';
+      padding-right: 5px;
+}
+.expanded > legend:before {
+    content: '\25BE';
+}
+.jsonform-required > label:after {
+    content: ' *';
+      color: red;
+}
+
+.jsonform-hasrequired:after {
+  content: '* Required field';
+  display: block;
+  color: red;
+  padding-top: 1em;
+}
+</style>
+
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/jquery.min.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/jquery-ui.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap-dropdown.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/jsv.js"></script>
+
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/underscore.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/lib/jsonform.js"></script>
+{# we import the schemas in the gloabl variable window.DATASETTE_CONFIG_metaSchema #}
+<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/schema.js"></script>
+{# this contains the actual value of the configuration #}
+<script id="config-data" type="application/json">{{ configJSON|safe }}</script>
+<script type="text/javascript">
+
+/**
+ * This pulls the JSON that we're storing as schema.json
+ */
+function getSchema() {
+  if (!window.NEXTLI_DATASETTE_CONFIG) {
+    throw new Error("Oh no: window.NEXTLI_DATASETTE_CONFIG doesn't exist. This could mean schema.js wasn't loaded properly or contains errors!");
+  }
+  return window.NEXTLI_DATASETTE_CONFIG.schema;
+}
+
+/**
+ * This pulls the JSON that we're storing as schema.json
+ */
+function getConfigData() {
+  const rawJSON = document.getElementById('config-data').innerHTML;
+  //console.log("rawJSON", rawJSON)
+  const keyValueData = JSON.parse(rawJSON);
+  window.keyValueData = keyValueData;
+  //console.log("keyValueData", keyValueData);
+  const arrayData = window.NEXTLI_DATASETTE_CONFIG.to_metadata_arrays(keyValueData);
+  //console.log("arrayData", arrayData);
+  window.arrayData = arrayData;
+  return arrayData;
+}
+
+function handleSubmit(new_value) {
+  console.log("new_value", new_value);
+  window.new_value = new_value;
+  // uploadFile(file, options).then(poll);
+}
+
+function getFormDescription(schema) {
+  /*
+  {
+    key: "databases",
+    expandable: true,
+  }, "*", {
+    type: "submit",
+    title: "Save Brandy",
+  }
+  */
+  return [
+    "title",
+    {
+      key: "description_html",
+      /* TODO: HTML code editor */
+      type: "textarea",
+    },
+    "*",
+    /*
+    {
+      "type": "advancedfieldset",
+      "expandable": true,
+      "items": [
+        "*"
+      ],
+    },
+    */
+    {
+      "type": "submit",
+      "title": "Save",
+    },
+    /*{
+      "type": "actions",
+      "items": [{
+        "type": "submit",
+        "title": "Save",
+        onClick: handleSubmit,
+      }],
+    },*/
+  ];
+}
+
+/**
+ * This handles a file selected/dropped. From here, we
+ * render the JSON schema form builder and setup the
+ * final submit button callback to ``.
+ *
+ * TODO: Determine if we're loading a table or database config.
+ */
+function loadEditor() {
+  const element = $("form#config");
+  const schema = getSchema();
+  const form_desc = getFormDescription(schema);
+  const value = getConfigData();
+  //console.log("value", value);
+
+  element.on("submit", function(e) {
+    console.log("element on submit");
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  element.find("input[type='submit']").on("click", function(e) {
+    console.log("input[type='submit'] clicked");
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  window.JSONFORM = element.jsonForm({
+    "schema": schema,
+    "form": form_desc,
+    "value": value,
+    "onSubmitValid": function(new_data) {
+      console.log("onSubmitValid", new_data);
+      handleSubmit(new_data);
+    },
+    "displayErrors": function (errors, formElt) {
+      console.log("displayErrors", errors, formElt);
+      $(formElt).jsonFormErrors(errors, element);
+    },
+    "onSubmit": function (errors, values) {
+      console.log("onSubmit", errors, values);
+      if (errors) {
+        alert('Check the form for invalid values!');
+        return;
+      }
+      // "values" follows the schema, yeepee!
+    },
+  });
+  // disable basic form submit
+    /*
+  form.on("submit", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("SUBMIT!");
+  });
+ */
+
+  console.log("window.JSONFORM", window.JSONFORM);
+}
+
+$(document).ready(loadEditor);
+</script>
+{% endblock %}
+
+{% block nav %}
+<p class="crumbs">
+  <a href="{{ urls.instance() }}">home</a>
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="configuration-editor">
+  <h1>Configuration Editor</h1>
+  <p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.
+  <form id="config" action="/-/config-editor" method="post">
+  </form>
+</div>
+{% endblock %}

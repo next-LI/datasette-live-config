@@ -41,11 +41,26 @@ progress::-webkit-progress-bar {
 progress::-webkit-progress-value {
     background-color: #124d77;
 }
-.content {
-  max-width: 800px;
+
+.editor-widget {
+  max-width: 80%;
   min-width: 300px;
-  margin: 0 auto;
-  padding: 50px;
+}
+.editor-widget .checkbox {
+  /* fix for description showing before the checkbox and title */
+  display: flex;
+  flex-flow: column-reverse wrap;
+}
+
+.editor-widget label {
+  /* there's no reason for the label width for checkboxes to be locked at 15% */
+  width: unset;
+}
+.editor-widget .checkbox label span {
+  font-weight: bold;
+}
+.editor-widget button[type="submit"].btn-info {
+  display: none;
 }
 </style>
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">

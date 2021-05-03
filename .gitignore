@@ -13,3 +13,6 @@ dist/
 node_modules
 config-editor/build
 *.log
+
+# we're not using this version for now
+config-ed/
