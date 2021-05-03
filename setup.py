@@ -13,16 +13,16 @@ def get_long_description():
 
 
 setup(
-    name="datasette-git-importer",
-    description="Datasette plugin for uploading CSV files, editing configuration and creating commits representing the changes.",
+    name="datasette-config-editor",
+    description="Datasette plugin allowing live configuration changes. WIP: Depends on next-LI/datasette branch with live config plugin hook.",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
-    author="Simon Willison",
-    url="https://github.com/next-LI/datasette",
+    author="Brandon Roberts",
+    url="https://github.com/next-LI/datasette-config-editor",
     license="Apache License, Version 2.0",
     version=VERSION,
-    packages=["datasette_git_importer"],
-    entry_points={"datasette": ["git_importer = datasette_git_importer"]},
+    packages=["datasette_config_editor"],
+    entry_points={"datasette": ["config_editor = datasette_config_editor"]},
     install_requires=[
         "datasette>=0.51",
         "asgi-csrf>=0.7",
@@ -36,5 +36,14 @@ setup(
     extras_require={
         "test": ["pytest", "pytest-asyncio", "asgiref", "httpx", "asgi-lifespan"]
     },
-    package_data={"datasette_git_importer": ["static/*", "templates/*.html"]},
+    package_data={"datasette_config_editor": [
+        "static/*",
+        "static/jsonform/deps/*",
+        "static/jsonform/deps/opt/*",
+        "static/jsonform/deps/underscore.js",
+        "static/jsonform/deps/jquery.min.js",
+        "static/jsonform/deps/opt/*",
+        "static/jsonform/lib/*.js",
+        "templates/*"
+    ]},
 )
