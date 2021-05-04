@@ -3,10 +3,6 @@
 {% block title %}Datasette Configuration Editor{% endblock %}
 
 {% block extra_head %}
-{# TODO: use a package manager to manage these deps #}
-<!--<link rel="stylesheet" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap.css">-->
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-
 <style>
 ._jsonform-array-ul li {
   margin: 20px;
@@ -36,6 +32,10 @@
   padding-top: 1em;
 }
 </style>
+
+{# TODO: use a package manager to manage these deps #}
+<!--<link rel="stylesheet" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap.css">-->
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
 <script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/jquery.min.js"></script>
 <script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/jquery-ui.js"></script>
