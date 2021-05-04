@@ -45,21 +45,15 @@ def menu_links(datasette, actor):
 
 
 def create_database(datasette):
-    print("creating database")
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
-    print(database_path)
+    print("creating database", database_path)
     db = sqlite_utils.Database(database_path)
-    # print("sqlite_utils db", db)
-    # if TABLE_NAME not in db:
-    #     db[TABLE_NAME].create({
-    #         "database_name": str,
-    #         "table_name": str,
-    #         "data": str,
-    #     })
-    # datasette.add_database(
-    #     DS_Database(datasette, path=database_path, is_mutable=True),
-    #     name=DB_NAME,
-    # )
+    if TABLE_NAME not in db:
+        db[TABLE_NAME].create({
+            "database_name": str,
+            "table_name": str,
+            "data": str,
+        }, pk=("database_name", "table_name"))
     return db
 
 
@@ -72,11 +66,17 @@ def get_or_create_database(datasette):
 
 def get_metadata_from_db(db, database, table):
     if not database and not table:
-        results = db[TABLE_NAME].rows_where("database_name is null and table_name is null", limit=1)
+        results = db[TABLE_NAME].rows_where(
+            "database_name is null and table_name is null", limit=1
+        )
     elif database and not table:
-        results = db[TABLE_NAME].rows_where("database_name=? and table_name is null", [database], limit=1)
+        results = db[TABLE_NAME].rows_where(
+            "database_name=? and table_name is null", [database], limit=1
+        )
     else:
-        results = db[TABLE_NAME].rows_where("database_name=? and table_name=?", [database, table], limit=1)
+        results = db[TABLE_NAME].rows_where(
+            "database_name=? and table_name=?", [database, table], limit=1
+        )
     if not results:
         return {}
     for row in results:
@@ -87,18 +87,24 @@ def get_metadata_from_db(db, database, table):
     return {}
 
 
+def save_metadata(datasette, database, table, data):
+    db = get_or_create_database(datasette)
+    return db[TABLE_NAME].insert({
+        "database_name": database,
+        "table_name": table,
+        "data": data if isinstance(data, str) else json.dumps(data),
+    }, pk=(database, table), replace=True)
+
+
 async def live_config(scope, receive, datasette, request):
-    print("HTTP live_config method", request.method)
-    # TODO: Decide if we use this directly or implicitly via ds.metadata()
-    # db = get_or_create_database(datasette)
     # TODO: get database name/table name
     # metadata = get_metadata_from_db(db, None, None)
-    metadata = datasette.metadata()
-    print("! _metadata", metadata)
     if request.method != "POST":
+        # TODO: Decide if we use this or pull saved config
+        metadata = datasette.metadata()
         return Response.html(
             await datasette.render_template(
-                "live_config.html", {
+                "config_editor.html", {
                     "database": None,
                     "table": None,
                     "configJSON": json.dumps(metadata)
@@ -106,27 +112,16 @@ async def live_config(scope, receive, datasette, request):
             )
         )
 
-    print("Doing update!")
-    # # VALIDATE
-    # # WRITE THE CONFIG
-    # formdata = await starlette_request.form()
-    # csv = formdata["csv"]
-    # # csv.file is a SpooledTemporaryFile. csv.filename is the filename
-    # filename = csv.filename
-    # if filename.endswith(".csv"):
-    #     filename = filename[:-4]
-
-    # print("CSV filename", filename)
-
-    # task_id = str(uuid.uuid4())
-
-    # print("Returning JSON")
-
+    formdata = await request.post_vars()
+    save_metadata(datasette, None, None, formdata["config"])
+    metadata = datasette.metadata()
     return Response.html(
         await datasette.render_template(
-            "live_config.html", {
-                "database"
-                "metadataJSON": json.dumps(metadata)
+            "config_editor.html", {
+                "database": None,
+                "table": None,
+                "message": "Configuration updated successfully!",
+                "configJSON": json.dumps(metadata),
             }, request=request
         )
     )
