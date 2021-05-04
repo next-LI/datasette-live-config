@@ -4,6 +4,9 @@
 
 {% block extra_head %}
 <style>
+form label {
+  width: 100%;
+}
 ._jsonform-array-ul li {
   margin: 20px;
   border: 1px dashed #ddd;
@@ -34,18 +37,18 @@
 </style>
 
 {# TODO: use a package manager to manage these deps #}
-<!--<link rel="stylesheet" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap.css">-->
+<!--<link rel="stylesheet" src="/-/static-plugins/datasette-live-config/jsonform/deps/opt/bootstrap.css">-->
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/jquery.min.js"></script>
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/jquery-ui.js"></script>
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/bootstrap-dropdown.js"></script>
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/opt/jsv.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/deps/jquery.min.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/deps/opt/jquery-ui.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/deps/opt/bootstrap-dropdown.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/deps/opt/jsv.js"></script>
 
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/deps/underscore.js"></script>
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/jsonform/lib/jsonform.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/deps/underscore.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/jsonform/lib/jsonform.js"></script>
 {# we import the schemas in the gloabl variable window.DATASETTE_CONFIG_metaSchema #}
-<script type="text/javascript" src="/-/static-plugins/datasette-config-editor/schema.js"></script>
+<script type="text/javascript" src="/-/static-plugins/datasette-live-config/schema.js"></script>
 {# this contains the actual value of the configuration #}
 <script id="config-data" type="application/json">{{ configJSON|safe }}</script>
 <script type="text/javascript">
@@ -195,7 +198,7 @@ $(document).ready(loadEditor);
 <div class="configuration-editor">
   <h1>Configuration Editor</h1>
   <p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.
-  <form id="config" action="/-/config-editor" method="post">
+  <form id="config" action="/-/live-config" method="post">
   </form>
 </div>
 {% endblock %}

@@ -13,16 +13,16 @@ def get_long_description():
 
 
 setup(
-    name="datasette-config-editor",
+    name="datasette-live-config",
     description="Datasette plugin allowing live configuration changes. WIP: Depends on next-LI/datasette branch with live config plugin hook.",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     author="Brandon Roberts",
-    url="https://github.com/next-LI/datasette-config-editor",
+    url="https://github.com/next-LI/datasette-live-config",
     license="Apache License, Version 2.0",
     version=VERSION,
-    packages=["datasette_config_editor"],
-    entry_points={"datasette": ["config_editor = datasette_config_editor"]},
+    packages=["datasette_live_config"],
+    entry_points={"datasette": ["live_config = datasette_live_config"]},
     install_requires=[
         "datasette>=0.51",
         "asgi-csrf>=0.7",
@@ -36,7 +36,7 @@ setup(
     extras_require={
         "test": ["pytest", "pytest-asyncio", "asgiref", "httpx", "asgi-lifespan"]
     },
-    package_data={"datasette_config_editor": [
+    package_data={"datasette_live_config": [
         "static/*",
         "static/jsonform/deps/*",
         "static/jsonform/deps/opt/*",

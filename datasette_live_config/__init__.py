@@ -19,14 +19,14 @@ TABLE_NAME=DB_NAME
 
 @hookimpl
 def permission_allowed(actor, action):
-    if action == "config-editor" and actor and actor.get("id") == "root":
+    if action == "live-config" and actor and actor.get("id") == "root":
         return True
 
 
 @hookimpl
 def register_routes():
     return [
-        (r"^/-/config-editor$", config_editor),
+        (r"^/-/live-config$", live_config),
     ]
 
 
@@ -34,11 +34,11 @@ def register_routes():
 def menu_links(datasette, actor):
     async def inner():
         allowed = await datasette.permission_allowed(
-            actor, "config-editor", default=False
+            actor, "live-config", default=False
         )
         if allowed:
             return [{
-                "href": datasette.urls.path("/-/config-editor"),
+                "href": datasette.urls.path("/-/live-config"),
                 "label": "Configuration editor"
             }]
     return inner
@@ -87,8 +87,8 @@ def get_metadata_from_db(db, database, table):
     return {}
 
 
-async def config_editor(scope, receive, datasette, request):
-    print("HTTP config_editor method", request.method)
+async def live_config(scope, receive, datasette, request):
+    print("HTTP live_config method", request.method)
     # TODO: Decide if we use this directly or implicitly via ds.metadata()
     # db = get_or_create_database(datasette)
     # TODO: get database name/table name
@@ -98,7 +98,7 @@ async def config_editor(scope, receive, datasette, request):
     if request.method != "POST":
         return Response.html(
             await datasette.render_template(
-                "config_editor.html", {
+                "live_config.html", {
                     "database": None,
                     "table": None,
                     "configJSON": json.dumps(metadata)
@@ -124,7 +124,7 @@ async def config_editor(scope, receive, datasette, request):
 
     return Response.html(
         await datasette.render_template(
-            "config_editor.html", {
+            "live_config.html", {
                 "database"
                 "metadataJSON": json.dumps(metadata)
             }, request=request
