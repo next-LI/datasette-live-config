@@ -11,7 +11,7 @@ build/
 dist/
 
 node_modules
-config-editor/build
+live-config/build
 *.log
 
 # we're not using this version for now

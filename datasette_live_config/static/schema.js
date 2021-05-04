@@ -58,11 +58,13 @@ const querySchema = {
 const allowSchema = {
   "allow": {
     "type": "string",
-    "description": "The JSON describing users with permission to this resource",
+    "title": "Allow access only to these users",
+    "description": "By default, databases are readable by everyone. Use this to grant access to only a specific set of users. Enter the JSON describing users with permission to this resource as defined in the datasette documentation.",
   },
   "allow_sql": {
     "type": "string",
-    "description": "The JSON describing users with SQL-access permission to this resource",
+    "title": "Allow SQL access only to these users",
+    "description": "This is similar to the above field, but this controls the ability of users to include this database in a cross-database SQL query. (This field also expects JSON.)",
   },
 };
 
@@ -243,7 +245,7 @@ function to_metadata_obj(data) {
     }
   });
 
-  databases = data["databases"] || [];
+  const databases = data["databases"] || [];
 
   databases.forEach((db, index) => {
     const db_name = db["_name"];
@@ -281,8 +283,6 @@ function to_metadata_obj(data) {
  * the schema validation/UI.
  */
 function to_metadata_arrays(metadata) {
-  console.log("DATASETTE KV METADATA", metadata)
-  window.METADATA = metadata;
   const data = {"databases": []};
 
   /* Get non-databases keys */
@@ -304,16 +304,13 @@ function to_metadata_arrays(metadata) {
 
     const flat_tables = [];
     const tables = db["tables"] || {};
-    console.log("tables", tables);
     Object.keys(tables).forEach((table_name) => {
-      console.log("table_name", table_name);
       const table = tables[table_name];
       table["_name"] = table_name;
 
       const flat_queries = [];
       const queries = table["queries"] || {};
       Object.keys(queries).forEach((query_name) => {
-        console.log("Converting query", query_name);
         const query = queries[query_name];
         query["_name"] = query_name;
         flat_queries.push(query);
@@ -323,7 +320,6 @@ function to_metadata_arrays(metadata) {
       const flat_units = [];
       const units = table["units"] || {};
       Object.keys(units).forEach((unit_name) => {
-        console.log("Converting unit", unit_name);
         flat_units.push({
           "_name": unit_name,
           "_value": units[unit_name],
@@ -335,7 +331,6 @@ function to_metadata_arrays(metadata) {
     });
 
     db["tables"] = flat_tables;
-    console.log("Pushing db", db);
     data["databases"].push(db);
   });
 
