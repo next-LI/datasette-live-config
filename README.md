@@ -4,6 +4,12 @@ Datasette plugin allowing live editing of configuration (`metadata.json` and `--
 
 ## Installation
 
+Make sure to get the submodules if you didn't clone with (`--recurse-submodules`):
+
+    git submodule update --init --recursive
+
+Then basic python module install:
+
     python setup.py install
 
 ## Usage
