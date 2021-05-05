@@ -1,0 +1,32 @@
+<head><link rel="shortcut icon" href="/favicon.ico"></head>{% extends "base.html" %} {% block title %}Datasette Configuration Editor{% endblock %} {% block extra_head %}<style>.editor-widget {
+  max-width: 100%;
+  min-width: 300px;
+}
+.editor-widget .checkbox {
+  /* fix for description showing before the checkbox and title */
+  display: flex;
+  flex-flow: column-reverse wrap;
+}
+.editor-widget label {
+  /* there's no reason for the label width for checkboxes to be locked at 15% */
+  width: unset;
+}
+
+.control-label {
+  margin-right: 10px;
+}
+
+.editor-widget .checkbox label span {
+  font-weight: bold;
+}
+.editor-widget button[type="submit"].btn-info {
+  display: none;
+}
+
+/* .row.array-item-list { */
+.form-group.field.field-object {
+  border: 1px dashed gray;
+  margin: 20px;
+  padding: 20px;
+  border-radius: 10px;
+}</style><link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">{% endblock %} {% block nav %}<p class="crumbs"><a href="{{ urls.instance() }}">home</a></p>{{super()}} {% endblock %} {% block content %}<div class="configuration-editor"><h1>Configuration Editor</h1>{% if message %}<div class="message {{status}}">{{message}}</div>{% endif %}<p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.</p><div data-widget-host="habitat"><script type="text/props">{ "color": "red"}</script></div></div><script id="config-data" type="application/json">{{ configJSON|safe }}</script><script async src="/-/static-plugins/datasette-live-config/bundle.js"></script>{% endblock %}

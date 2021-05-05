@@ -106,7 +106,7 @@ async def live_config(scope, receive, datasette, request):
         metadata = datasette.metadata()
         return Response.html(
             await datasette.render_template(
-                "config_editor.html", {
+                "config_editor2.html", {
                     "database": database_name,
                     "table": table_name,
                     "configJSON": json.dumps(metadata)
@@ -119,7 +119,7 @@ async def live_config(scope, receive, datasette, request):
     metadata = datasette.metadata()
     return Response.html(
         await datasette.render_template(
-            "config_editor.html", {
+            "config_editor2.html", {
                 "database": None,
                 "table": None,
                 "message": "Configuration updated successfully!",
