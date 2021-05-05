@@ -3,6 +3,7 @@ from datasette.utils.asgi import Response, Forbidden
 from starlette.requests import Request
 import os
 import sqlite_utils
+import sqlite3
 
 
 import json
@@ -12,14 +13,16 @@ from datasette import hookimpl
 from datasette.database import Database as DS_Database
 
 
-DEFAULT_DBPATH="data"
+DEFAULT_DBPATH="."
 DB_NAME="live_config"
 TABLE_NAME=DB_NAME
 
 
 @hookimpl
 def permission_allowed(actor, action):
+    return True
     if action == "live-config" and actor and actor.get("id") == "root":
+        print("!!!!! PERMISSION ALLOWED")
         return True
 
 
@@ -44,39 +47,32 @@ def menu_links(datasette, actor):
     return inner
 
 
-def create_database(datasette):
+def get_metadata_from_db(database_name, table_name):
+    print(f"get_metadata_from_db({database_name}, {table_name})")
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
-    print("creating database", database_path)
-    db = sqlite_utils.Database(database_path)
-    if TABLE_NAME not in db:
-        db[TABLE_NAME].create({
-            "database_name": str,
-            "table_name": str,
-            "data": str,
-        }, pk=("database_name", "table_name"))
-    return db
+    db = sqlite_utils.Database(sqlite3.connect(database_path))
+    try:
+        configs = db[TABLE_NAME]
+    except Exception as e:
+        print(f"!!! Error loading table: {e}")
+        return {}
 
-
-def get_or_create_database(datasette):
-    if DB_NAME not in datasette.databases:
-        return create_database(datasette)
-    database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
-    return sqlite_utils.Database(database_path)
-
-
-def get_metadata_from_db(db, database, table):
-    if not database and not table:
-        results = db[TABLE_NAME].rows_where(
+    if not database_name and not table_name:
+        print("NONONONONONONONONO")
+        results = configs.rows_where(
             "database_name is null and table_name is null", limit=1
         )
-    elif database and not table:
-        results = db[TABLE_NAME].rows_where(
-            "database_name=? and table_name is null", [database], limit=1
+    elif database_name and not table_name:
+        results = configs.rows_where(
+            "database_name=? and table_name is null", [database_name], limit=1
         )
     else:
-        results = db[TABLE_NAME].rows_where(
-            "database_name=? and table_name=?", [database, table], limit=1
+        results = configs.rows_where(
+            "database_name=? and table_name=?", [
+                database_name, table_name
+            ], limit=1
         )
+    print("results", results)
     if not results:
         return {}
     for row in results:
@@ -87,33 +83,39 @@ def get_metadata_from_db(db, database, table):
     return {}
 
 
-def save_metadata(datasette, database, table, data):
-    db = get_or_create_database(datasette)
-    return db[TABLE_NAME].insert({
-        "database_name": database,
-        "table_name": table,
-        "data": data if isinstance(data, str) else json.dumps(data),
-    }, pk=(database, table), replace=True)
+def update_config(database_name, table_name, data):
+    # TODO: validate JSON?
+    assert isinstance(data, str)
+    database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
+    db = sqlite_utils.Database(sqlite3.connect(database_path))
+    configs = db[TABLE_NAME]
+    configs.insert({
+        "database_name": database_name,
+        "table_name": table_name,
+        "data": data,
+    }, pk=("database_name", "table_name"), replace=True)
+    return configs
 
 
 async def live_config(scope, receive, datasette, request):
     # TODO: get database name/table name
-    # metadata = get_metadata_from_db(db, None, None)
+    database_name = None
+    table_name = None
     if request.method != "POST":
         # TODO: Decide if we use this or pull saved config
         metadata = datasette.metadata()
         return Response.html(
             await datasette.render_template(
                 "config_editor.html", {
-                    "database": None,
-                    "table": None,
+                    "database": database_name,
+                    "table": table_name,
                     "configJSON": json.dumps(metadata)
                 }, request=request
             )
         )
 
     formdata = await request.post_vars()
-    save_metadata(datasette, None, None, formdata["config"])
+    update_config(database_name, table_name, formdata["config"])
     metadata = datasette.metadata()
     return Response.html(
         await datasette.render_template(
@@ -121,6 +123,7 @@ async def live_config(scope, receive, datasette, request):
                 "database": None,
                 "table": None,
                 "message": "Configuration updated successfully!",
+                "status": "success",
                 "configJSON": json.dumps(metadata),
             }, request=request
         )
@@ -142,8 +145,7 @@ def get_metadata(datasette, key, database, table, fallback):
         print("No datasette!")
         return {}
 
-    db = get_or_create_database(datasette)
-    return get_metadata_from_db(db, database, table)
+    return get_metadata_from_db(database, table)
     # databases = metadata.get("databases") or {}
     # if database and not table:
     #     return databases.get(database)
