@@ -34,6 +34,12 @@ form label {
   color: red;
   padding-top: 1em;
 }
+.message.success {
+  background-color: rgba(0, 255, 0, 0.2);
+}
+.message.failure {
+  background-color: rgba(255, 0, 0, 0.2);
+}
 </style>
 
 {# TODO: use a package manager to manage these deps #}
@@ -81,7 +87,19 @@ function getConfigData() {
 function handleSubmit(new_value) {
   console.log("new_value", new_value);
   window.new_value = new_value;
-  // uploadFile(file, options).then(poll);
+
+  const data = new URLSearchParams({
+    "csrftoken": "{{ csrftoken() }}",
+    "config": JSON.stringify(new_value),
+  });
+  fetch("/-/live-config", {
+    method: 'post',
+    body: data,
+  })
+  .then((resp) => {
+    console.log("window.resp", resp);
+    window.resp = resp;
+  }).catch((e) => console.error);
 }
 
 function getFormDescription(schema) {
@@ -155,17 +173,25 @@ function loadEditor() {
     "schema": schema,
     "form": form_desc,
     "value": value,
+    /*
     "onSubmitValid": function(new_data) {
-      console.log("onSubmitValid", new_data);
+      console.log("window.onSubmitValidNEW_DATA", new_data);
+      console.log("VALUE", value);
+      window.onSubmitValidNEW_DATA = new_data;
       handleSubmit(new_data);
     },
+    */
     "displayErrors": function (errors, formElt) {
       console.log("displayErrors", errors, formElt);
       $(formElt).jsonFormErrors(errors, element);
     },
+    "onSubmit": function (errors, values) {
+      console.log("onSubmit", errors, "window.onSubmitVALUES", values);
+      console.log("VALUE", value);
+      window.onSubmitVALUES = values;
+    },
     /*
     "onSubmit": function (errors, values) {
-      console.log("onSubmit", errors, values);
       if (errors) {
         alert('Check the form for invalid values!');
         return;
@@ -194,13 +220,19 @@ $(document).ready(loadEditor);
 <p class="crumbs">
   <a href="{{ urls.instance() }}">home</a>
 </p>
+{{super()}}
 {% endblock %}
 
 {% block content %}
 <div class="configuration-editor">
   <h1>Configuration Editor</h1>
+  {% if message %}
+  <div class="message {{status}}">
+    {{message}}
+  </div>
+  {% endif %}
   <p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.
-  <form id="config" action="/-/live-config" method="post">
+  <form id="config" action="#" method="post">
   </form>
 </div>
 {% endblock %}
