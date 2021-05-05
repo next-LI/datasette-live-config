@@ -3,57 +3,80 @@ import Form from "react-jsonschema-form";
 import {
   metaSchema, tableSchema, to_metadata_arrays, to_metadata_obj
 } from "./schema.js";
-//import "./style.scss";
 
 /**
  * This pulls the JSON that we're storing as schema.json
  */
 function getConfigData() {
   const rawJSON = document.getElementById('config-data').innerHTML;
-  console.log("rawJSON", rawJSON)
   const keyValueData = JSON.parse(rawJSON);
-  console.log("keyValueData", keyValueData);
   const arrayData = to_metadata_arrays(keyValueData);
-  console.log("arrayData", arrayData);
   return arrayData;
 }
 
 
-function handleSubmit(metadata) {
-  const data = new URLSearchParams({
-    "csrftoken": "{{ csrftoken() }}",
-    "config": JSON.stringify(metadata),
-  });
-  fetch("/-/live-config", {
-    method: 'post',
-    body: data,
-  })
-  .then((resp) => {
-    console.log("window.resp", resp);
-    window.resp = resp;
-  }).catch((e) => console.error);
-}
-
-
-let formRef;
+let formRef, msgRef;
 
 export default class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      status: null,
+      message: null,
+    };
+  }
+
+  handleSubmit(metadata, csrftoken) {
+    const data = new URLSearchParams({
+      "csrftoken": csrftoken,
+      "config": JSON.stringify(metadata),
+    });
+    fetch("/-/live-config", {
+      method: 'post',
+      body: data,
+    })
+    .then((resp) => {
+      this.setState({
+        status: "success",
+        message: "Configuration has been successfully updated!",
+      });
+      setTimeout(() => {
+        this.setState({
+          status: null,
+          message: null,
+        });
+      }, 5000);
+    }).catch((e) => console.error);
+  }
+
+  showMessage() {
+    setTimeout(() => {
+      /* Scroll to top of page where info box is */
+      window.scroll({ top: 0, left: 0, behavior: "smooth"});
+    }, 250);
+    return (
+      <div id="update-message" ref={(el) => {msgRef = el;}}
+          class={this.state.status}>
+        {this.state.message}
+      </div>
+    );
+  }
+
   render(props) {
-    const formData = getConfigData();
     return (
       <div class="editor-widget">
-        <Form schema={metaSchema} formData={formData}
+        { this.state.message && this.showMessage() }
+        <Form schema={metaSchema} formData={getConfigData()}
+          /*
           onChange={(data, e) => {
-            console.log("Datasette Config Changed", data, e);
           }}
+          */
           onSubmit={(data, e) => {
-            console.log("Datasette Config Submitted", data, e);
             const metadata = to_metadata_obj(data.formData);
-            console.log("metadata", metadata);
-            handleSubmit(metadata);
+            this.handleSubmit(metadata, props.csrftoken);
           }}
           onError={(data, e) => {
-            console.log("Datasette Config Error", data, e);
+            console.error("Datasette Config Error", data, e);
           }} ref={(form) => {formRef = form;}} />
         <button onClick={() => {formRef.submit()}}>{"Save"}</button>
       </div>
