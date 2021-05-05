@@ -14,5 +14,5 @@ node_modules
 live-config/build
 *.log
 
-# we're not using this version for now
-config-ed/
+config-ed/build/
+config-ed/node_modules/

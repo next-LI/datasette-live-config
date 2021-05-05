@@ -1,3 +1,0 @@
-[submodule "datasette_live_config/static/jsonform"]
-	path = datasette_live_config/static/jsonform
-	url = https://github.com/jsonform/jsonform
