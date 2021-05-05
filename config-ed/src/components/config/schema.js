@@ -319,7 +319,7 @@ export function to_metadata_arrays(metadata) {
   });
 
   /* Capture all databases to the array */
-  Object.keys(metadata.databases).forEach((db_name) => {
+  Object.keys(metadata.databases || {}).forEach((db_name) => {
     const db = metadata.databases[db_name];
     db["_name"] = db_name;
 

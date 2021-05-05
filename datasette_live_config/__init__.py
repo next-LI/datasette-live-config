@@ -20,9 +20,7 @@ TABLE_NAME=DB_NAME
 
 @hookimpl
 def permission_allowed(actor, action):
-    return True
     if action == "live-config" and actor and actor.get("id") == "root":
-        print("!!!!! PERMISSION ALLOWED")
         return True
 
 
@@ -48,17 +46,14 @@ def menu_links(datasette, actor):
 
 
 def get_metadata_from_db(database_name, table_name):
-    print(f"get_metadata_from_db({database_name}, {table_name})")
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     try:
         configs = db[TABLE_NAME]
     except Exception as e:
-        print(f"!!! Error loading table: {e}")
         return {}
 
     if not database_name and not table_name:
-        print("NONONONONONONONONO")
         results = configs.rows_where(
             "database_name is null and table_name is null", limit=1
         )
@@ -72,11 +67,9 @@ def get_metadata_from_db(database_name, table_name):
                 database_name, table_name
             ], limit=1
         )
-    print("results", results)
     if not results:
         return {}
     for row in results:
-        print("row:", row, "data:", type(row["data"]))
         if "data" not in row:
             return {}
         return json.loads(row["data"])
@@ -84,6 +77,7 @@ def get_metadata_from_db(database_name, table_name):
 
 
 def update_config(database_name, table_name, data):
+    assert database_name and table_name, "Database and table names blank!"
     # TODO: validate JSON?
     assert isinstance(data, str)
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
@@ -99,14 +93,14 @@ def update_config(database_name, table_name, data):
 
 async def live_config(scope, receive, datasette, request):
     # TODO: get database name/table name
-    database_name = None
-    table_name = None
+    database_name = "global"
+    table_name = "global"
     if request.method != "POST":
         # TODO: Decide if we use this or pull saved config
         metadata = datasette.metadata()
         return Response.html(
             await datasette.render_template(
-                "config_editor2.html", {
+                "config_editor.html", {
                     "database": database_name,
                     "table": table_name,
                     "configJSON": json.dumps(metadata)
@@ -119,9 +113,9 @@ async def live_config(scope, receive, datasette, request):
     metadata = datasette.metadata()
     return Response.html(
         await datasette.render_template(
-            "config_editor2.html", {
-                "database": None,
-                "table": None,
+            "config_editor.html", {
+                "database": database_name,
+                "table": table_name,
                 "message": "Configuration updated successfully!",
                 "status": "success",
                 "configJSON": json.dumps(metadata),
@@ -140,9 +134,7 @@ async def live_config(scope, receive, datasette, request):
 # level, which leads to another TODO: permissioning (maybe use `allow`?)
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
-    print(f"get_metadata database={database} table={table} key={key} fallback={fallback}")
     if not datasette:
-        print("No datasette!")
         return {}
 
     return get_metadata_from_db(database, table)
