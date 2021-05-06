@@ -24,7 +24,7 @@ setup(
     packages=["datasette_live_config"],
     entry_points={"datasette": ["live_config = datasette_live_config"]},
     install_requires=[
-        "datasette>=0.51",
+        "datasette==0.56.1-nextli",
         "asgi-csrf>=0.7",
         "starlette",
         "aiofiles",
