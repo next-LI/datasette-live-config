@@ -134,14 +134,10 @@ async def live_config(scope, receive, datasette, request):
 # level, which leads to another TODO: permissioning (maybe use `allow`?)
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
-    if not datasette:
-        return {}
-
-    return get_metadata_from_db(database, table)
+    return get_metadata_from_db("global", "global")
     # databases = metadata.get("databases") or {}
     # if database and not table:
     #     return databases.get(database)
     # if database and table:
     #     return databases.get(database, {}).get(table, {})
     # return metadata
-
