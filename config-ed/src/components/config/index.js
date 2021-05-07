@@ -27,10 +27,12 @@ export default class App extends Component {
   }
 
   handleSubmit(metadata, csrftoken) {
+    const metadataString = JSON.stringify(metadata);
     const data = new URLSearchParams({
       "csrftoken": csrftoken,
-      "config": JSON.stringify(metadata),
+      "config": metadataString,
     });
+    document.getElementById('config-data').innerHTML = metadataString;
     fetch("/-/live-config", {
       method: 'post',
       body: data,
@@ -63,22 +65,27 @@ export default class App extends Component {
   }
 
   render(props) {
+    const formData = getConfigData();
     return (
       <div class="editor-widget">
         { this.state.message && this.showMessage() }
-        <Form schema={metaSchema} formData={getConfigData()}
+        <Form schema={metaSchema} formData={formData}
           /*
           onChange={(data, e) => {
           }}
           */
           onSubmit={(data, e) => {
-            const metadata = to_metadata_obj(data.formData);
+            const metadata = to_metadata_obj(Object.assign({},...data.formData));
             this.handleSubmit(metadata, props.csrftoken);
           }}
           onError={(data, e) => {
             console.error("Datasette Config Error", data, e);
-          }} ref={(form) => {formRef = form;}} />
-        <button onClick={() => {formRef.submit()}}>{"Save"}</button>
+          }} ref={(form) => {formRef = form;}}
+        >
+          <div>
+            <input type="submit" value="Save" />
+          </div>
+        </Form>
       </div>
     );
   }
