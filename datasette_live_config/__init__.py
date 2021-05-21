@@ -1,15 +1,11 @@
 from datasette import hookimpl
 from datasette.utils.asgi import Response, Forbidden
-from starlette.requests import Request
+# from starlette.requests import Request
+import json
 import os
 import sqlite_utils
 import sqlite3
 
-
-import json
-import os
-
-from datasette import hookimpl
 from datasette.database import Database as DS_Database
 
 
@@ -92,9 +88,16 @@ def update_config(database_name, table_name, data):
 
 
 async def live_config(scope, receive, datasette, request):
-    # TODO: get database name/table name
+    # TODO: get database name/table name, do perms check below
+    # based on the specific DB/Table
     database_name = "global"
     table_name = "global"
+    if not await datasette.permission_allowed(
+        request.actor, "live-config", # (database_name, table_name),
+        default=False
+    ):
+        raise Forbidden("Permission denied for live-config")
+
     if request.method != "POST":
         # TODO: Decide if we use this or pull saved config
         metadata = datasette.metadata()
@@ -131,7 +134,7 @@ async def live_config(scope, receive, datasette, request):
 # global metadata structure. i'm thinking that we probably want to construct
 # the global metadata structure from queries for configurations in our
 # database with table set. this way users can permission out on the table
-# level, which leads to another TODO: permissioning (maybe use `allow`?)
+# level, which leads to another
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
     return get_metadata_from_db("global", "global")
