@@ -126,6 +126,20 @@ async def live_config(scope, receive, datasette, request):
         )
     )
 
+def update_from_db_metadata(metadata, datasette, key, database, table):
+    if database and database in datasette.databases:
+        db = sqlite_utils.Database(datasette.databases[database].connect())
+        if "__metadata" not in db.table_names():
+            return metadata
+        meta_table = db["__metadata"]
+        for row in meta_table.rows:
+            row_key = row.get("key")
+            row_value = row.get("value")
+            if key and row_key != key:
+                continue
+            metadata[database][table][key] = json.loads(row_value)
+    return metadata
+
 
 # This does the actual configuration lookup. This gets called when something
 # requests metadata/config or uses plugin_config.
@@ -137,7 +151,9 @@ async def live_config(scope, receive, datasette, request):
 # level, which leads to another
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
-    return get_metadata_from_db("global", "global")
+    metadata = get_metadata_from_db("global", "global")
+    update_from_db_metadata(metadata, datasette, key, database, table)
+    return metadata
     # databases = metadata.get("databases") or {}
     # if database and not table:
     #     return databases.get(database)
