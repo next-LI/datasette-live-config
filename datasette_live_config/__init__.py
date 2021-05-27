@@ -126,18 +126,59 @@ async def live_config(scope, receive, datasette, request):
         )
     )
 
-def update_from_db_metadata(metadata, datasette, key, database, table):
-    if database and database in datasette.databases:
-        db = sqlite_utils.Database(datasette.databases[database].connect())
+
+# shared with datasette:app.py (Datasette._metadata_recursive_update)
+def _metadata_recursive_update(self, orig, updated):
+    if not isinstance(orig, dict) or not isinstance(updated, dict):
+        return
+
+    for key, cust_value in updated.items():
+        upd_value = updated[key]
+        if isinstance(upd_value, dict) and isinstance(orig.get(key), dict):
+            orig[key] = self._metadata_recursive_update(
+                orig[key], upd_value
+            )
+        else:
+            orig[key] = updated[key]
+    return orig
+
+
+def update_from_db_metadata(metadata, datasette, database, table):
+    """
+    Update the global metadata using data found inside a database's
+    __metadata table. Anything found in the table will be merged (if it's a dict)
+    into the global meta or, if it's not a dict, will override the global value.
+
+    This mutates the provided metadata dict object.
+    """
+    if not database or database not in datasette.databases:
+        return
+
+    for db_name in datasette.databases:
+        if database and db_name != database:
+            continue
+
+        db = sqlite_utils.Database(datasette.databases[db_name].connect())
         if "__metadata" not in db.table_names():
-            return metadata
+            return
         meta_table = db["__metadata"]
+        # some basic bootstrapping here ....
+        if "databases" not in metadata:
+            metadata["databases"] = {}
+        if db_name not in metadata["databases"]:
+            metadata["databases"][database] = {}
         for row in meta_table.rows:
-            row_key = row.get("key")
+            key = row.get("key")
             row_value = row.get("value")
-            if key and row_key != key:
-                continue
-            metadata[database][table][key] = json.loads(row_value)
+            obj_value = json.loads(row_value)
+            if isinstance(obj_value, dict):
+                if key not in metadata["databases"][db_name]:
+                    metadata["databases"][db_name][key] = {}
+                _metadata_recursive_update(
+                    metadata["databases"][db_name][key], obj_value
+                )
+            else:
+                metadata["databases"][db_name][key] = obj_value
     return metadata
 
 
@@ -152,7 +193,7 @@ def update_from_db_metadata(metadata, datasette, key, database, table):
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
     metadata = get_metadata_from_db("global", "global")
-    update_from_db_metadata(metadata, datasette, key, database, table)
+    update_from_db_metadata(metadata, datasette, database, table)
     return metadata
     # databases = metadata.get("databases") or {}
     # if database and not table:

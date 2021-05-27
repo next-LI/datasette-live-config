@@ -246,9 +246,13 @@ export function to_metadata_obj(data) {
   const metadata = Object.assign({}, data);
 
   /* Copy non databases keys over */
-  Object.keys(data).forEach((key) => {
+  Object.keys(data || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql" || key === "plugins") {
-      metadata[key] = JSON.parse(data[key]);
+      try {
+        metadata[key] = JSON.parse(data[key]);
+      } catch(e) {
+        metadata[key] = null;
+      }
     }
     else if (key === "databases") {
       metadata["databases"] = {};
@@ -307,7 +311,7 @@ export function to_metadata_arrays(metadata) {
   const data = {"databases": []};
 
   /* Get non-databases keys */
-  Object.keys(metadata).forEach((key) => {
+  Object.keys(metadata || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql" || key === "plugins") {
       data[key] = JSON.stringify(metadata[key]);
       return;
