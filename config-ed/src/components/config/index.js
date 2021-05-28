@@ -26,14 +26,14 @@ export default class App extends Component {
     };
   }
 
-  handleSubmit(metadata, csrftoken) {
+  handleSubmit(metadata, csrftoken, submit_url) {
     const metadataString = JSON.stringify(metadata);
     const data = new URLSearchParams({
       "csrftoken": csrftoken,
       "config": metadataString,
     });
     document.getElementById('config-data').innerHTML = metadataString;
-    fetch("/-/live-config", {
+    fetch(submit_url, {
       method: 'post',
       body: data,
     })
@@ -76,7 +76,7 @@ export default class App extends Component {
           */
           onSubmit={(data, e) => {
             const metadata = to_metadata_obj(Object.assign({},...data.formData));
-            this.handleSubmit(metadata, props.csrftoken);
+            this.handleSubmit(metadata, props.csrftoken, props.submit_url);
           }}
           onError={(data, e) => {
             console.error("Datasette Config Error", data, e);

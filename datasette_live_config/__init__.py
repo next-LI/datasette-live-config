@@ -88,6 +88,7 @@ def update_config(database_name, table_name, data):
 
 
 async def live_config(scope, receive, datasette, request):
+    submit_url = "/-/live-config"
     # TODO: get database name/table name, do perms check below
     # based on the specific DB/Table
     database_name = "global"
@@ -98,6 +99,7 @@ async def live_config(scope, receive, datasette, request):
     ):
         raise Forbidden("Permission denied for live-config")
 
+
     if request.method != "POST":
         # TODO: Decide if we use this or pull saved config
         metadata = datasette.metadata()
@@ -106,7 +108,8 @@ async def live_config(scope, receive, datasette, request):
                 "config_editor.html", {
                     "database": database_name,
                     "table": table_name,
-                    "configJSON": json.dumps(metadata)
+                    "configJSON": json.dumps(metadata),
+                    "submit_url": submit_url,
                 }, request=request
             )
         )
@@ -122,6 +125,7 @@ async def live_config(scope, receive, datasette, request):
                 "message": "Configuration updated successfully!",
                 "status": "success",
                 "configJSON": json.dumps(metadata),
+                "submit_url": submit_url,
             }, request=request
         )
     )
