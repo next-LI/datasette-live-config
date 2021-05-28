@@ -86,6 +86,11 @@ export const tableSchema = {
       "description": "Enter the name of the table to configure",
       "type": "string",
     },
+    "title": {
+      "title": "Title",
+      "description": "An alternate name to show for this table.",
+      "type": "string",
+    },
     "description_html": {
       "title": "Table description",
       "description": "Enter a description of the table to show users. This may contain HTML.",
@@ -185,6 +190,11 @@ export const dbSchema = {
       "description": "Enter the name of a database to configure.",
       "type": "string",
     },
+    "title": {
+      "title": "Title",
+      "description": "An alternate name to show for this database.",
+      "type": "string",
+    },
     "source": {
       "title": "Source",
       "description": "Where this data came from?",
@@ -239,6 +249,20 @@ export const metaSchema = {
 export function db_to_metadata_obj(db) {
   delete db["_name"];
 
+  Object.keys(db || {}).forEach((key) => {
+    if (key === "allow" || key === "allow_sql") {
+      if (!db[key]) {
+        delete db[key];
+      } else {
+        try {
+          db[key] = JSON.parse(db[key]);
+        } catch(e) {
+          console.error("Error on key:", key, "parsing data:", db[key]); 
+        }
+      }
+    }
+  });
+
   const kvtables = {};
   const tables = db["tables"] || [];
   tables.forEach((table) => {
@@ -281,13 +305,21 @@ export function to_metadata_obj(data) {
   /* clone the object, we're going to mutate it */
   const metadata = Object.assign({}, data);
 
-  /* Copy non databases keys over */
+  /**
+   * Copy non databases keys over
+   * At some point, maybe anything not inside the schema as a specific
+   * type should go across as stringified?
+   */
   Object.keys(data || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql" || key === "plugins") {
-      try {
-        metadata[key] = JSON.parse(data[key]);
-      } catch(e) {
-        metadata[key] = null;
+      if (!data[key]) {
+        delete metadata[key];
+      } else {
+        try {
+          metadata[key] = JSON.parse(data[key]);
+        } catch(e) {
+          console.error("Error on key:", key, "parsing data:", data[key]); 
+        }
       }
     }
     else if (key === "databases") {
@@ -310,6 +342,14 @@ export function to_metadata_obj(data) {
 
 export function db_to_metadata_arrays(db) {
   const flat_tables = [];
+
+  Object.keys(db || {}).forEach((key) => {
+    if (key === "allow" || key === "allow_sql") {
+      db[key] = JSON.stringify(db[key]);
+      return;
+    }
+  });
+
   const tables = db["tables"] || {};
   Object.keys(tables).forEach((table_name) => {
     const table = tables[table_name];

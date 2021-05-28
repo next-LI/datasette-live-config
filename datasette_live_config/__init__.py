@@ -42,12 +42,26 @@ def menu_links(datasette, actor):
     return inner
 
 
+@hookimpl
+def database_actions(datasette, actor, database):
+    async def inner_database_actions():
+        allowed = await datasette.permission_allowed(
+            actor, "live-config", (database,), default=False
+        )
+        if allowed:
+            return [{
+                "href": datasette.urls.path(f"/-/live-config/{database}?meta_in_db=true"),
+                "label": "Edit database configuration",
+            }]
+    return inner_database_actions
+
+
 def get_metadata_from_db(database_name, table_name):
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     try:
         configs = db[TABLE_NAME]
-    except Exception as e:
+    except Exception:
         return {}
 
     if not database_name and not table_name:
@@ -73,7 +87,16 @@ def get_metadata_from_db(database_name, table_name):
     return {}
 
 
-def update_config(database_name, table_name, data):
+def update_db_metadata(ds_database, db_meta):
+    db = sqlite_utils.Database(sqlite3.connect(ds_database.path))
+    for key, value in db_meta.items():
+        db["__metadata"].insert({
+            "key": key,
+            "value": json.dumps(value),
+        }, pk="key", alter=True, replace=True)
+
+
+def update_live_config_db(database_name, table_name, data):
     assert database_name and table_name, "Database and table names blank!"
     # TODO: validate JSON?
     assert isinstance(data, str)
@@ -91,6 +114,9 @@ def update_config(database_name, table_name, data):
 async def live_config(scope, receive, datasette, request):
     submit_url = request.path
     database_name = request.url_vars.get("database_name", "global")
+    meta_in_db = True if request.args.get("meta_in_db") else False
+    if meta_in_db:
+        submit_url += '?meta_in_db=true'
     table_name = "global"
     perm_args = ()
     if database_name:
@@ -105,6 +131,8 @@ async def live_config(scope, receive, datasette, request):
     if request.method != "POST":
         # TODO: Decide if we use this or pull saved config
         metadata = datasette.metadata()
+        if database_name and database_name != "global":
+            metadata = metadata["databases"].get(database_name, {})
         return Response.html(
             await datasette.render_template(
                 "config_editor.html", {
@@ -116,8 +144,14 @@ async def live_config(scope, receive, datasette, request):
         )
 
     formdata = await request.post_vars()
-    update_config(database_name, table_name, formdata["config"])
+    if meta_in_db and database_name in datasette.databases:
+        db_meta = json.loads(formdata["config"])
+        update_db_metadata(datasette.databases[database_name], db_meta)
+    else:
+        update_live_config_db(database_name, table_name, formdata["config"])
     metadata = datasette.metadata()
+    if database_name != "global":
+        metadata = metadata["databases"][database_name]
     return Response.html(
         await datasette.render_template(
             "config_editor.html", {
@@ -155,22 +189,16 @@ def update_from_db_metadata(metadata, datasette, database, table):
 
     This mutates the provided metadata dict object.
     """
-    if not database or database not in datasette.databases:
-        return
-
     for db_name in datasette.databases:
-        if database and db_name != database:
-            continue
-
         db = sqlite_utils.Database(datasette.databases[db_name].connect())
         if "__metadata" not in db.table_names():
-            return
+            continue
         meta_table = db["__metadata"]
         # some basic bootstrapping here ....
         if "databases" not in metadata:
             metadata["databases"] = {}
         if db_name not in metadata["databases"]:
-            metadata["databases"][database] = {}
+            metadata["databases"][db_name] = {}
         for row in meta_table.rows:
             key = row.get("key")
             row_value = row.get("value")
