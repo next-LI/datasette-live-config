@@ -175,6 +175,43 @@ export const tableSchema = {
   //"required": ["_name"],
 };
 
+export const dbSchema = {
+  "title": "Database",
+  // "description": "Database to configure",
+  "type": "object",
+  "properties": {
+    "_name": {
+      "title": "Name",
+      "description": "Enter the name of a database to configure.",
+      "type": "string",
+    },
+    "source": {
+      "title": "Source",
+      "description": "Where this data came from?",
+      "type": "string",
+    },
+    "source_url": {
+      "title": "Source URL",
+      "description": "URL to info about source",
+      "type": "string",
+      "examples": ["https://example.tld"],
+    },
+    "description": {
+      "title": "Database description",
+      "description": "Enter a description of the database to show users. This may contain HTML.",
+      "type": "string",
+    },
+    ...allowSchema,
+    "tables": {
+      "title": "Tables",
+      "description": "Add or select a database table to configure",
+      "type": "array",
+      "items": tableSchema
+    },
+  },
+  //"required": ["_name"],
+};
+
 export const metaSchema = {
   "type": "object",
   "properties": {
@@ -194,45 +231,44 @@ export const metaSchema = {
       "title": "Databases",
       "description": "This lets you control database settings for tables, queries, units, and various display and analysis related options. If you don't see any databases, it's because no databases are currently configured. You add a database configuration by clicking the plus button.",
       "type": "array",
-      "items": {
-        "title": "Database",
-        // "description": "Database to configure",
-        "type": "object",
-        "properties": {
-          "_name": {
-            "title": "Name",
-            "description": "Enter the name of a database to configure.",
-            "type": "string",
-          },
-          "source": {
-            "title": "Source",
-            "description": "Where this data came from?",
-            "type": "string",
-          },
-          "source_url": {
-            "title": "Source URL",
-            "description": "URL to info about source",
-            "type": "string",
-            "examples": ["https://example.tld"],
-          },
-          "description": {
-            "title": "Database description",
-            "description": "Enter a description of the database to show users. This may contain HTML.",
-            "type": "string",
-          },
-          ...allowSchema,
-          "tables": {
-            "title": "Tables",
-            "description": "Add or select a database table to configure",
-            "type": "array",
-            "items": tableSchema
-          },
-        },
-        //"required": ["_name"],
-      },
+      "items": dbSchema,
     },
   },
 };
+
+export function db_to_metadata_obj(db) {
+  delete db["_name"];
+
+  const kvtables = {};
+  const tables = db["tables"] || [];
+  tables.forEach((table) => {
+    const table_name = table["_name"];
+    delete table["_name"];
+    kvtables[table_name] = table;
+
+    const queries = table["queries"] || [];
+    queries.forEach((query) => {
+      query_name = query["_name"];
+      if (!table["queries"]) table["queries"] = {};
+      table["queries"][query_name] = query;
+    });
+
+    const units = table["units"] || [];
+    units.forEach((unit) => {
+      if (!table["units"]) table["units"] = {};
+      table["units"][unit["_name"]] = unit["_value"];
+    });
+
+    // attach the table via key->value
+    if (!db["tables"]) {
+      db["tables"] = {};
+    }
+  });
+  if (Object.keys(kvtables).length) {
+    db["tables"] = kvtables;
+  }
+  return db;
+}
 
 /**
  * Take a metadata that conforms to the above schema (which uses arrays
@@ -265,39 +301,51 @@ export function to_metadata_obj(data) {
   /* Iterate over databases converting inner objects */
   (data["databases"] || []).forEach((db, index) => {
     const db_name = db["_name"];
-    delete db["_name"];
+    db_to_metadata_obj(db);
     metadata["databases"][db_name] = db;
-
-    const kvTables = {};
-    const tables = db["tables"] || [];
-    tables.forEach((table) => {
-      const table_name = table["_name"];
-      delete table["_name"];
-      kvTables[table_name] = table;
-
-      const queries = table["queries"] || [];
-      queries.forEach((query) => {
-        query_name = query["_name"];
-        if (!table["queries"]) table["queries"] = {};
-        table["queries"][query_name] = query;
-      });
-
-      const units = table["units"] || [];
-      units.forEach((unit) => {
-        if (!table["units"]) table["units"] = {};
-        table["units"][unit["_name"]] = unit["_value"];
-      });
-
-      // attach the table via key->value
-      if (!db["tables"]) {
-        db["tables"] = {};
-      }
-    });
-    if (Object.keys(kvTables).length) {
-      db["tables"] = kvTables;
-    }
   });
   return metadata;
+}
+
+
+export function db_to_metadata_arrays(db) {
+  const flat_tables = [];
+  const tables = db["tables"] || {};
+  Object.keys(tables).forEach((table_name) => {
+    const table = tables[table_name];
+    table["_name"] = table_name;
+
+    const flat_queries = [];
+    const queries = table["queries"] || {};
+    Object.keys(queries).forEach((query_name) => {
+      const query = queries[query_name];
+      query["_name"] = query_name;
+      flat_queries.push(query);
+    });
+    if (flat_queries.length) {
+      table["queries"] = flat_queries;
+    }
+
+    const flat_units = [];
+    const units = table["units"] || {};
+    Object.keys(units).forEach((unit_name) => {
+      flat_units.push({
+        "_name": unit_name,
+        "_value": units[unit_name],
+      });
+    });
+    if (flat_units.length) {
+      table["units"] = flat_units;
+    }
+
+    flat_tables.push(table);
+  });
+
+  if (flat_tables.length) {
+    db["tables"] = flat_tables;
+  }
+
+  return db;
 }
 
 /**
@@ -326,42 +374,7 @@ export function to_metadata_arrays(metadata) {
   Object.keys(metadata.databases || {}).forEach((db_name) => {
     const db = metadata.databases[db_name];
     db["_name"] = db_name;
-
-    const flat_tables = [];
-    const tables = db["tables"] || {};
-    Object.keys(tables).forEach((table_name) => {
-      const table = tables[table_name];
-      table["_name"] = table_name;
-
-      const flat_queries = [];
-      const queries = table["queries"] || {};
-      Object.keys(queries).forEach((query_name) => {
-        const query = queries[query_name];
-        query["_name"] = query_name;
-        flat_queries.push(query);
-      });
-      if (flat_queries.length) {
-        table["queries"] = flat_queries;
-      }
-
-      const flat_units = [];
-      const units = table["units"] || {};
-      Object.keys(units).forEach((unit_name) => {
-        flat_units.push({
-          "_name": unit_name,
-          "_value": units[unit_name],
-        });
-      });
-      if (flat_units.length) {
-        table["units"] = flat_units;
-      }
-
-      flat_tables.push(table);
-    });
-
-    if (flat_tables.length) {
-      db["tables"] = flat_tables;
-    }
+    db_to_metadata_arrays(db);
     data["databases"].push(db);
   });
 

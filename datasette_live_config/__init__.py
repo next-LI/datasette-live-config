@@ -24,6 +24,7 @@ def permission_allowed(actor, action):
 def register_routes():
     return [
         (r"^/-/live-config$", live_config),
+        (r"^/-/live-config/(?P<database_name>.*)$", live_config),
     ]
 
 
@@ -88,13 +89,14 @@ def update_config(database_name, table_name, data):
 
 
 async def live_config(scope, receive, datasette, request):
-    submit_url = "/-/live-config"
-    # TODO: get database name/table name, do perms check below
-    # based on the specific DB/Table
-    database_name = "global"
+    submit_url = request.path
+    database_name = request.url_vars.get("database_name", "global")
     table_name = "global"
+    perm_args = ()
+    if database_name:
+        perm_args = (database_name,)
     if not await datasette.permission_allowed(
-        request.actor, "live-config", # (database_name, table_name),
+        request.actor, "live-config", *perm_args,
         default=False
     ):
         raise Forbidden("Permission denied for live-config")
@@ -106,8 +108,7 @@ async def live_config(scope, receive, datasette, request):
         return Response.html(
             await datasette.render_template(
                 "config_editor.html", {
-                    "database": database_name,
-                    "table": table_name,
+                    "database_name": database_name,
                     "configJSON": json.dumps(metadata),
                     "submit_url": submit_url,
                 }, request=request
@@ -120,8 +121,7 @@ async def live_config(scope, receive, datasette, request):
     return Response.html(
         await datasette.render_template(
             "config_editor.html", {
-                "database": database_name,
-                "table": table_name,
+                "database_name": database_name,
                 "message": "Configuration updated successfully!",
                 "status": "success",
                 "configJSON": json.dumps(metadata),

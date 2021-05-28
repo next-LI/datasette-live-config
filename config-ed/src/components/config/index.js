@@ -1,7 +1,8 @@
 import { h, Component } from "preact";
 import Form from "react-jsonschema-form";
 import {
-  metaSchema, tableSchema, to_metadata_arrays, to_metadata_obj
+  metaSchema, dbSchema, to_metadata_arrays, to_metadata_obj,
+  db_to_metadata_arrays, db_to_metadata_obj,
 } from "./schema.js";
 
 /**
@@ -64,19 +65,36 @@ export default class App extends Component {
     );
   }
 
+  getSchema(database_name) {
+    if (!database_name || database_name === "global") {
+      return metaSchema;
+    }
+    return dbSchema;
+  }
+
+  getMetadata(formData, database_name) {
+    const copied_formData = Object.assign({},...data.formData);
+    if (!database_name || database_name === "global") {
+      return to_metadata_obj(copied_formData);
+    }
+    return db_to_metadata_arrays(copied_formData);
+  }
+
   render(props) {
     const formData = getConfigData();
     return (
       <div class="editor-widget">
         { this.state.message && this.showMessage() }
-        <Form schema={metaSchema} formData={formData}
-          /*
-          onChange={(data, e) => {
-          }}
-          */
+        <Form schema={this.getSchema(props.database_name)} formData={formData}
           onSubmit={(data, e) => {
-            const metadata = to_metadata_obj(Object.assign({},...data.formData));
-            this.handleSubmit(metadata, props.csrftoken, props.submit_url);
+            const copied_formData = Object.assign({},...data.formData);
+            let metadata = null;
+            if (!database_name || database_name === "global") {
+              metadata = to_metadata_obj(copied_formData);
+            } else {
+              metadata = db_to_metadata_obj(copied_formData);
+            }
+            this.handleSubmit(metadata, props.csrftoken, props.submit_url, props.database_name);
           }}
           onError={(data, e) => {
             console.error("Datasette Config Error", data, e);
