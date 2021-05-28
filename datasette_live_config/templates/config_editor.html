@@ -35,4 +35,9 @@
   background-color: rgba(0,255,0,0.1);
   padding: 20px;
   text-align: center;
-}</style><link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">{% endblock %} {% block nav %}<p class="crumbs"><a href="{{ urls.instance() }}">home</a></p>{{super()}} {% endblock %} {% block content %}<div class="configuration-editor"><h1>Configuration Editor</h1>{% if message %}<div class="message {{status}}">{{message}}</div>{% endif %}<p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.</p><div data-widget-host="habitat"><script type="text/props">{  "csrftoken": "{{csrftoken()}}", "submit_url": "{{submit_url}}", "db_name": "{{db_name}}" }</script></div></div><script id="config-data" type="application/json">{{ configJSON|safe }}</script><script async src="/-/static-plugins/datasette-live-config/bundle.js"></script>{% endblock %}
+}
+.failure {
+  background-color: rgba(255,0,0,0.1);
+  padding: 20px;
+  text-align: center;
+}</style><link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">{% endblock %} {% block nav %}<p class="crumbs"><a href="{{ urls.instance() }}">home</a></p>{{super()}} {% endblock %} {% block content %}<div class="configuration-editor"><h1>Configuration Editor</h1>{% if message %}<div class="message {{status}}">{{message}}</div>{% endif %}<p>Use the form below to edit settings for databases, tables, views and more. You can read the <a href="https://docs.datasette.io/en/stable/metadata.html">Datasette documentation about metadata</a> for explanations of what these settings do.</p><div data-widget-host="habitat"><script type="text/props">{  "csrftoken": "{{csrftoken()}}", "submit_url": "{{submit_url}}", "database_name": "{{database_name}}" }</script></div></div><script id="config-data" type="application/json">{{ configJSON|safe }}</script><script async src="/-/static-plugins/datasette-live-config/bundle.js"></script>{% endblock %}
