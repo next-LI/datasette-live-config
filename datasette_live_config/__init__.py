@@ -1,12 +1,11 @@
 from datasette import hookimpl
-from datasette.utils.asgi import Response, Forbidden
-# from starlette.requests import Request
+import functools
 import json
 import os
 import sqlite_utils
 import sqlite3
 
-from datasette.database import Database as DS_Database
+from .views import register_routes # noqa
 
 
 DEFAULT_DBPATH="."
@@ -18,14 +17,6 @@ TABLE_NAME=DB_NAME
 def permission_allowed(actor, action):
     if action == "live-config" and actor and actor.get("id") == "root":
         return True
-
-
-@hookimpl
-def register_routes():
-    return [
-        (r"^/-/live-config$", live_config),
-        (r"^/-/live-config/(?P<database_name>.*)$", live_config),
-    ]
 
 
 @hookimpl
@@ -56,9 +47,21 @@ def database_actions(datasette, actor, database):
     return inner_database_actions
 
 
-def get_metadata_from_db(database_name, table_name):
+@functools.lru_cache
+def get_live_config_db():
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
     db = sqlite_utils.Database(sqlite3.connect(database_path))
+    return db
+
+
+@functools.lru_cache
+def get_datasette_db(datasette, db_name):
+    db = sqlite_utils.Database(datasette.databases[db_name].connect())
+    return db
+
+
+def get_metadata_from_db(database_name, table_name):
+    db = get_live_config_db()
     try:
         configs = db[TABLE_NAME]
     except Exception:
@@ -78,6 +81,7 @@ def get_metadata_from_db(database_name, table_name):
                 database_name, table_name
             ], limit=1
         )
+
     if not results:
         return {}
     for row in results:
@@ -85,84 +89,6 @@ def get_metadata_from_db(database_name, table_name):
             return {}
         return json.loads(row["data"])
     return {}
-
-
-def update_db_metadata(ds_database, db_meta):
-    db = sqlite_utils.Database(sqlite3.connect(ds_database.path))
-    for key, value in db_meta.items():
-        db["__metadata"].insert({
-            "key": key,
-            "value": json.dumps(value),
-        }, pk="key", alter=True, replace=True)
-
-
-def update_live_config_db(database_name, table_name, data):
-    assert database_name and table_name, "Database and table names blank!"
-    # TODO: validate JSON?
-    assert isinstance(data, str)
-    database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
-    db = sqlite_utils.Database(sqlite3.connect(database_path))
-    configs = db[TABLE_NAME]
-    configs.insert({
-        "database_name": database_name,
-        "table_name": table_name,
-        "data": data,
-    }, pk=("database_name", "table_name"), replace=True)
-    return configs
-
-
-async def live_config(scope, receive, datasette, request):
-    submit_url = request.path
-    database_name = request.url_vars.get("database_name", "global")
-    meta_in_db = True if request.args.get("meta_in_db") else False
-    if meta_in_db:
-        submit_url += '?meta_in_db=true'
-    table_name = "global"
-    perm_args = ()
-    if database_name:
-        perm_args = (database_name,)
-    if not await datasette.permission_allowed(
-        request.actor, "live-config", *perm_args,
-        default=False
-    ):
-        raise Forbidden("Permission denied for live-config")
-
-
-    if request.method != "POST":
-        # TODO: Decide if we use this or pull saved config
-        metadata = datasette.metadata()
-        if database_name and database_name != "global":
-            metadata = metadata["databases"].get(database_name, {})
-        return Response.html(
-            await datasette.render_template(
-                "config_editor.html", {
-                    "database_name": database_name,
-                    "configJSON": json.dumps(metadata),
-                    "submit_url": submit_url,
-                }, request=request
-            )
-        )
-
-    formdata = await request.post_vars()
-    if meta_in_db and database_name in datasette.databases:
-        db_meta = json.loads(formdata["config"])
-        update_db_metadata(datasette.databases[database_name], db_meta)
-    else:
-        update_live_config_db(database_name, table_name, formdata["config"])
-    metadata = datasette.metadata()
-    if database_name != "global":
-        metadata = metadata["databases"][database_name]
-    return Response.html(
-        await datasette.render_template(
-            "config_editor.html", {
-                "database_name": database_name,
-                "message": "Configuration updated successfully!",
-                "status": "success",
-                "configJSON": json.dumps(metadata),
-                "submit_url": submit_url,
-            }, request=request
-        )
-    )
 
 
 # shared with datasette:app.py (Datasette._metadata_recursive_update)
@@ -185,12 +111,13 @@ def update_from_db_metadata(metadata, datasette, database, table):
     """
     Update the global metadata using data found inside a database's
     __metadata table. Anything found in the table will be merged (if it's a dict)
-    into the global meta or, if it's not a dict, will override the global value.
+    into the global meta or, if it's not a dict, will override the corresponding
+    value.
 
-    This mutates the provided metadata dict object.
+    This mutates the provided metadata dict object (and also return it for chaining).
     """
     for db_name in datasette.databases:
-        db = sqlite_utils.Database(datasette.databases[db_name].connect())
+        db = get_datasette_db(datasette, db_name)
         if "__metadata" not in db.table_names():
             continue
         meta_table = db["__metadata"]
@@ -214,6 +141,13 @@ def update_from_db_metadata(metadata, datasette, database, table):
     return metadata
 
 
+# This lives as a separate function so we can profile it easily
+def run_get_metadata(datasette, key, database, table, fallback):
+    metadata = get_metadata_from_db("global", "global")
+    update_from_db_metadata(metadata, datasette, database, table)
+    return metadata
+
+
 # This does the actual configuration lookup. This gets called when something
 # requests metadata/config or uses plugin_config.
 # TODO: it doesn't seem like this function gets called with table anything
@@ -224,12 +158,4 @@ def update_from_db_metadata(metadata, datasette, database, table):
 # level, which leads to another
 @hookimpl
 def get_metadata(datasette, key, database, table, fallback):
-    metadata = get_metadata_from_db("global", "global")
-    update_from_db_metadata(metadata, datasette, database, table)
-    return metadata
-    # databases = metadata.get("databases") or {}
-    # if database and not table:
-    #     return databases.get(database)
-    # if database and table:
-    #     return databases.get(database, {}).get(table, {})
-    # return metadata
+    return run_get_metadata(datasette, key, database, table, fallback)
