@@ -1,5 +1,6 @@
 import json
 import os
+from urllib.parse import unquote_plus
 
 from datasette import hookimpl
 from datasette.utils.asgi import Response, Forbidden
@@ -27,15 +28,23 @@ def update_live_config_db(database_name, table_name, data):
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     configs = db[TABLE_NAME]
-    configs.insert({
-        "database_name": database_name,
-        "table_name": table_name,
-        "data": data,
-    }, pk=("database_name", "table_name"), replace=True)
-    configs.create_index([
-        "database_name", "table_name",
-    ], unique=True)
-    return configs
+    existing = configs.rows_where(
+        "database_name=? and table_name=?",
+        (database_name, table_name),
+    )
+    if not len(list(existing)):
+        configs.insert({
+            "database_name": database_name,
+            "table_name": table_name,
+            "data": data,
+        }, pk=("database_name", "table_name"), replace=True)
+        configs.create_index([
+            "database_name", "table_name",
+        ], unique=True)
+    else:
+        configs.update((database_name, table_name), {
+            "data": data,
+        })
 
 
 def update_db_metadata(ds_database, db_meta):
@@ -49,7 +58,9 @@ def update_db_metadata(ds_database, db_meta):
 
 async def live_config(scope, receive, datasette, request):
     submit_url = request.path
-    database_name = request.url_vars.get("database_name", "global")
+    database_name = unquote_plus(request.url_vars.get(
+        "database_name", "global"
+    ))
     meta_in_db = True if request.args.get("meta_in_db") else False
     if meta_in_db:
         submit_url += '?meta_in_db=true'
@@ -85,6 +96,7 @@ async def live_config(scope, receive, datasette, request):
         update_db_metadata(datasette.databases[database_name], db_meta)
     else:
         update_live_config_db(database_name, table_name, formdata["config"])
+
     metadata = datasette.metadata()
     if database_name != "global":
         metadata = metadata["databases"][database_name]
