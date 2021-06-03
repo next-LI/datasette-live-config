@@ -92,18 +92,17 @@ def get_metadata_from_db(database_name, table_name):
 
 
 # shared with datasette:app.py (Datasette._metadata_recursive_update)
-def _metadata_recursive_update(self, orig, updated):
+def _metadata_recursive_update(orig, updated):
     if not isinstance(orig, dict) or not isinstance(updated, dict):
-        return
+        return orig
 
-    for key, cust_value in updated.items():
-        upd_value = updated[key]
+    for key, upd_value in updated.items():
         if isinstance(upd_value, dict) and isinstance(orig.get(key), dict):
-            orig[key] = self._metadata_recursive_update(
+            orig[key] = _metadata_recursive_update(
                 orig[key], upd_value
             )
         else:
-            orig[key] = updated[key]
+            orig[key] = upd_value
     return orig
 
 
@@ -136,7 +135,7 @@ def update_from_db_metadata(metadata, datasette, database, table):
                 _metadata_recursive_update(
                     metadata["databases"][db_name][key], obj_value
                 )
-            else:
+            elif obj_value:
                 metadata["databases"][db_name][key] = obj_value
     return metadata
 
