@@ -27,10 +27,11 @@ export default class App extends Component {
     this.state = {
       status: null,
       message: null,
+      database_name: null,
     };
   }
 
-  handleSubmit(metadata, csrftoken, submit_url) {
+  handleSubmit(metadata, csrftoken, submit_url, database_name) {
     const metadataString = JSON.stringify(metadata);
     const data = new URLSearchParams({
       "csrftoken": csrftoken,
@@ -46,6 +47,7 @@ export default class App extends Component {
       this.setState({
         status: ok ? "success" : "failure",
         message: ok ? "Configuration has been successfully updated!" : `Failure: ${resp.statusText}`,
+        database_name: ok ? database_name : null,
       });
       setTimeout(() => {
         this.setState({
@@ -65,6 +67,11 @@ export default class App extends Component {
       <div id="update-message" ref={(el) => {msgRef = el;}}
           class={this.state.status}>
         {this.state.message}
+        {this.state.database_name &&
+          <p>
+            <a href={`/${this.state.database_name}`}>Go to {this.state.database_name} →</a>
+          </p>
+        }
       </div>
     );
   }
