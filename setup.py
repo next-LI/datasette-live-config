@@ -1,7 +1,7 @@
 from setuptools import setup
 import os
 
-VERSION = "0.11.4"
+VERSION = "0.11.5"
 
 
 def get_long_description():
@@ -24,7 +24,7 @@ setup(
     packages=["datasette_live_config"],
     entry_points={"datasette": ["live_config = datasette_live_config"]},
     install_requires=[
-        "datasette>=0.56",
+        # "datasette>=0.56",
         "asgi-csrf>=0.7",
         "starlette",
         "aiofiles",
