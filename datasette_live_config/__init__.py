@@ -47,14 +47,14 @@ def database_actions(datasette, actor, database):
     return inner_database_actions
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=128)
 def get_live_config_db():
     database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     return db
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=128)
 def get_datasette_db(datasette, db_name):
     db = sqlite_utils.Database(datasette.databases[db_name].connect())
     return db
