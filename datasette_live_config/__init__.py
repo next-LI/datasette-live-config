@@ -37,7 +37,7 @@ def menu_links(datasette, actor):
 def database_actions(datasette, actor, database):
     async def inner_database_actions():
         allowed = await datasette.permission_allowed(
-            actor, "live-config", (database,), default=False
+            actor, "live-config", database, default=False
         )
         if allowed:
             return [{
