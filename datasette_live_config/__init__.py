@@ -141,7 +141,7 @@ def update_from_db_metadata(metadata, datasette, database, table):
 
 
 # This lives as a separate function so we can profile it easily
-def run_get_metadata(datasette, key, database, table, fallback):
+def run_get_metadata(datasette, key, database, table):
     metadata = get_metadata_from_db("global", "global")
     update_from_db_metadata(metadata, datasette, database, table)
     return metadata
@@ -156,5 +156,5 @@ def run_get_metadata(datasette, key, database, table, fallback):
 # database with table set. this way users can permission out on the table
 # level, which leads to another
 @hookimpl
-def get_metadata(datasette, key, database, table, fallback):
-    return run_get_metadata(datasette, key, database, table, fallback)
+def get_metadata(datasette, key, database, table):
+    return run_get_metadata(datasette, key, database, table)
