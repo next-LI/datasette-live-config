@@ -4,6 +4,10 @@ import {
   metaSchema, dbSchema, to_metadata_arrays, to_metadata_obj,
   db_to_metadata_arrays, db_to_metadata_obj,
 } from "./schema.js";
+import {
+  metaUiSchema, dbUiSchema
+} from "./uiSchema.js";
+
 
 /**
  * This pulls the JSON that we're storing as schema.json
@@ -63,13 +67,19 @@ export default class App extends Component {
       /* Scroll to top of page where info box is */
       window.scroll({ top: 0, left: 0, behavior: "smooth"});
     }, 250);
+    let goMsg = `Go to ${this.state.database_name} →`;
+    let goUrl = `/${this.state.database_name}`;
+    if (this.state.database_name === "global") {
+      goMsg = `Go to the home page →`;
+      goUrl = "/";
+    }
     return (
       <div id="update-message" ref={(el) => {msgRef = el;}}
           class={this.state.status}>
         {this.state.message}
         {this.state.database_name &&
           <p>
-            <a href={`/${this.state.database_name}`}>Go to {this.state.database_name} →</a>
+            <a href={goUrl}>{ goMsg }</a>
           </p>
         }
       </div>
@@ -83,12 +93,21 @@ export default class App extends Component {
     return dbSchema;
   }
 
+  getUiSchema(database_name) {
+    if (!database_name || database_name === "global") {
+      return metaUiSchema;
+    }
+    return dbUiSchema;
+  }
+
   render(props) {
     const formData = getFormData(props.database_name);
     return (
       <div class="editor-widget">
         { this.state.message && this.showMessage() }
-        <Form schema={this.getSchema(props.database_name)} formData={formData}
+        <Form schema={this.getSchema(props.database_name)}
+          uiSchema={this.getUiSchema(props.database_name)}
+          formData={formData}
           onSubmit={(data, e) => {
             const copied_formData = Object.assign({},...data.formData);
             let metadata = null;
