@@ -37,12 +37,12 @@ function get_base_url() {
   // path part should be the DB name, live_permissions
   const parts = window.location.pathname.split("/")
   // no path prefix, return blank not a slash
-  if (parts[0] == 'live_config') {
+  if (parts[0] == '-') {
     return '';
   }
   let already_seen = false;
   const prefix = parts.map((part) => {
-    if (already_seen || (part === 'live_config')) {
+    if (already_seen || (part === '-')) {
       already_seen = true;
       return null;
     }
