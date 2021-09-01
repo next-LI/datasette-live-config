@@ -7,10 +7,7 @@ from datasette.utils.asgi import Response, Forbidden
 import sqlite3
 import sqlite_utils
 
-
-DEFAULT_DBPATH="."
-DB_NAME="live_config"
-TABLE_NAME=DB_NAME
+from .common import get_db_path, TABLE_NAME
 
 
 @hookimpl
@@ -21,11 +18,10 @@ def register_routes():
     ]
 
 
-def update_live_config_db(database_name, table_name, data):
+def update_live_config_db(datasette, database_name, table_name, data):
     assert database_name and table_name, "Database and table names blank!"
-    # TODO: validate JSON?
     assert isinstance(data, str)
-    database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
+    database_path = get_db_path(datasette)
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     configs = db[TABLE_NAME]
     existing = configs.rows_where(
@@ -95,7 +91,9 @@ async def live_config(scope, receive, datasette, request):
         db_meta = json.loads(formdata["config"])
         update_db_metadata(datasette.databases[database_name], db_meta)
     else:
-        update_live_config_db(database_name, table_name, formdata["config"])
+        update_live_config_db(
+            datasette, database_name, table_name, formdata["config"]
+        )
 
     metadata = datasette.metadata()
     if database_name != "global":

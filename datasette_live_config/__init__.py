@@ -5,12 +5,8 @@ import os
 import sqlite_utils
 import sqlite3
 
+from .common import get_db_path, TABLE_NAME
 from .views import register_routes # noqa
-
-
-DEFAULT_DBPATH="."
-DB_NAME="live_config"
-TABLE_NAME=DB_NAME
 
 
 @hookimpl
@@ -48,8 +44,8 @@ def database_actions(datasette, actor, database):
 
 
 @functools.lru_cache(maxsize=128)
-def get_live_config_db():
-    database_path = os.path.join(DEFAULT_DBPATH, f"{DB_NAME}.db")
+def get_live_config_db(datasette):
+    database_path = get_db_path(datasette)
     db = sqlite_utils.Database(sqlite3.connect(database_path))
     return db
 
@@ -60,8 +56,8 @@ def get_datasette_db(datasette, db_name):
     return db
 
 
-def get_metadata_from_db(database_name, table_name):
-    db = get_live_config_db()
+def get_metadata_from_db(datasette, database_name, table_name):
+    db = get_live_config_db(datasette)
     try:
         configs = db[TABLE_NAME]
     except Exception:
@@ -142,7 +138,7 @@ def update_from_db_metadata(metadata, datasette, database, table):
 
 # This lives as a separate function so we can profile it easily
 def run_get_metadata(datasette, key, database, table):
-    metadata = get_metadata_from_db("global", "global")
+    metadata = get_metadata_from_db(datasette, "global", "global")
     update_from_db_metadata(metadata, datasette, database, table)
     return metadata
 

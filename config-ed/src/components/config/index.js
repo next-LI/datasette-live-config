@@ -23,6 +23,38 @@ function getFormData(database_name) {
   return db_flat;
 }
 
+
+/**
+ * Gets the datasette "base_url" setting, which is actually
+ * not a URL, but a path prefix, e.g., /datasette
+ */
+function get_base_url() {
+  // we can set it via a script in the template...
+  if (window.DATASETTE_BASE_URL) {
+    return window.DATASETTE_BASE_URL;
+  }
+  // we can pull it from the URL, by assuming the first
+  // path part should be the DB name, live_permissions
+  const parts = window.location.pathname.split("/")
+  // no path prefix, return blank not a slash
+  if (parts[0] == 'live_config') {
+    return '';
+  }
+  let already_seen = false;
+  const prefix = parts.map((part) => {
+    if (already_seen || (part === 'live_config')) {
+      already_seen = true;
+      return null;
+    }
+    return part;
+  }).filter(x=>x).join("/");
+  if (!prefix || !prefix.length) {
+    return '';
+  }
+  return `/${prefix}`;
+}
+
+
 let formRef, msgRef;
 
 export default class App extends Component {
@@ -67,11 +99,12 @@ export default class App extends Component {
       /* Scroll to top of page where info box is */
       window.scroll({ top: 0, left: 0, behavior: "smooth"});
     }, 250);
+    const base_url = get_base_url();
     let goMsg = `Go to ${this.state.database_name} →`;
-    let goUrl = `/${this.state.database_name}`;
+    let goUrl = `${base_url}/${this.state.database_name}`;
     if (this.state.database_name === "global") {
       goMsg = `Go to the home page →`;
-      goUrl = "/";
+      goUrl = `${base_url}/`;
     }
     return (
       <div id="update-message" ref={(el) => {msgRef = el;}}
