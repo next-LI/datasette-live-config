@@ -4,6 +4,10 @@ import os
 DEFAULT_DBPATH="."
 DB_NAME="live_config"
 TABLE_NAME=DB_NAME
+BLOCKED_DB_ACTIONS = [
+    "live_permissions", "live_config", "surveys",
+    "_internal", "_memory",
+]
 
 
 def get_db_path(datasette):

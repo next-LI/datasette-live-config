@@ -5,7 +5,7 @@ import os
 import sqlite_utils
 import sqlite3
 
-from .common import get_db_path, TABLE_NAME
+from .common import get_db_path, TABLE_NAME, BLOCKED_DB_ACTIONS
 from .views import register_routes # noqa
 
 
@@ -32,6 +32,8 @@ def menu_links(datasette, actor):
 @hookimpl
 def database_actions(datasette, actor, database):
     async def inner_database_actions():
+        if database in BLOCKED_DB_ACTIONS:
+            return
         allowed = await datasette.permission_allowed(
             actor, "live-config", database, default=False
         )
