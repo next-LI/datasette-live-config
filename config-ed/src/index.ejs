@@ -74,6 +74,6 @@
   </div>
 </div>
 <script id="config-data" type="application/json">{{ configJSON|safe }}</script>
-<script type="text/javascript">window.DATASETTE_BASE_URL = "{{ base_url|safe }}";</script>
-<script async src="{{base_url}}/-/static-plugins/datasette-live-config/bundle.js"></script>
+<script type="text/javascript">window.DATASETTE_BASE_URL = "{{ base_url }}";</script>
+<script async src="{{base_url}}-/static-plugins/datasette-live-config/bundle.js"></script>
 {% endblock %}
