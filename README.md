@@ -4,6 +4,14 @@ Datasette plugin allowing live editing of configuration (`metadata.json` and `--
 
 ## Installation
 
+Installing via GitHub is the simplest.
+
+    datasette install git+https://github.com/next-LI/datasette-live-config.git
+
+That's it! You can specify a version, branch or SHA1 by adding an `@` symbol followed by the identifier, e.g.: `@v0.12.7`
+
+## Development
+
 Then basic python module install:
 
     python setup.py install
