@@ -152,7 +152,7 @@ export const tableSchema = {
         "title": "Column name",
         "type": "string",
       },
-      "default": [],
+      // "default": [],
     },
 
     "facets": {
