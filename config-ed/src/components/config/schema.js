@@ -274,6 +274,8 @@ export function db_to_metadata_obj(db) {
     queries.forEach((query) => {
       const query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
+      console.log(query["_name"]);
+      console.log(query_name);
       table["queries"][query_name] = query;
     });
 
@@ -358,6 +360,7 @@ export function db_to_metadata_arrays(db) {
     const flat_queries = [];
     const queries = table["queries"] || {};
     Object.keys(queries).forEach((query_name) => {
+      console.log(query_name)
       const query = queries[query_name];
       query["_name"] = query_name;
       flat_queries.push(query);
