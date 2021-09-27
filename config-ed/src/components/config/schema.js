@@ -272,7 +272,7 @@ export function db_to_metadata_obj(db) {
 
     const queries = table["queries"] || [];
     queries.forEach((query) => {
-      query_name = query["_name"];
+      const query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
       table["queries"][query_name] = query;
     });
