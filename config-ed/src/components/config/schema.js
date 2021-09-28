@@ -174,7 +174,7 @@ export const tableSchema = {
     "queries": {
       "type": "array",
       "title": "Canned queries",
-      "items": querySchema,
+      "items": {querySchema},
     }
   },
   //"required": ["_name"],
@@ -273,12 +273,12 @@ export function db_to_metadata_obj(db) {
     kvtables[table_name] = table;
 
     const queries = table["queries"] || {};
-    console.log(table[queries])
+    console.log('276:', table[queries])
     Object.keys(queries).forEach((query_name) => {
-      console.log(queries)
+      console.log('278', queries)
       // const query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
-      console.log(query_name);
+      console.log('281', query_name);
       // table["queries"][query_name] = query;
       Object.assign(table['queries'], {query_name:queries[query_name]})
     });
