@@ -272,7 +272,7 @@ export function db_to_metadata_obj(db) {
     delete table["_name"];
     kvtables[table_name] = table;
 
-    const queries = table["queries"] || [];
+    const queries = table["queries"] || {};
     queries.forEach((query) => {
       let query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
@@ -359,7 +359,7 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
-  console.log('this is getting the data from the db to metadata')
+  console.log('this is getting the data from the db to config')
   console.log('***')
   console.log(db)
   Object.keys(tables).forEach((table_name) => {
