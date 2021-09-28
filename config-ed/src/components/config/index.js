@@ -13,12 +13,15 @@ import {
  * This pulls the JSON that we're storing as schema.json
  */
 function getFormData(database_name) {
+  console.log('firing getFormData')
   const rawJSON = document.getElementById('config-data').innerHTML;
   // This is key-value, as expected by datasette
   if (!database_name || database_name === "global") {
     return to_metadata_arrays(JSON.parse(rawJSON))
   }
   const db_flat = db_to_metadata_arrays(JSON.parse(rawJSON))
+  console.log('getFormData\'s db_flat is here')
+  console.log(db_flat)
   db_flat["_name"] = database_name;
   return db_flat;
 }
