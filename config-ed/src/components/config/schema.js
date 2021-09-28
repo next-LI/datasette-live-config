@@ -172,9 +172,9 @@ export const tableSchema = {
     },
 
     "queries": {
-      "type": "array",
+      "type": "object",
       "title": "Canned queries",
-      "items": {querySchema},
+      "items": querySchema,
     }
   },
   //"required": ["_name"],
