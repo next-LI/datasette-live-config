@@ -248,6 +248,8 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
+  console.log('this is form to db')
+  console.log('---')
 
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
@@ -296,6 +298,7 @@ export function db_to_metadata_obj(db) {
     db["tables"] = kvtables;
   }
   console.log(db)
+  console.log('---')
   return db;
 }
 
@@ -356,6 +359,9 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
+  console.log('this is getting the data from the db to metadata')
+  console.log('***')
+  console.log(db)
   Object.keys(tables).forEach((table_name) => {
     const table = tables[table_name];
     table["_name"] = table_name;
@@ -390,7 +396,7 @@ export function db_to_metadata_arrays(db) {
   if (flat_tables.length) {
     db["tables"] = flat_tables;
   }
-
+  console.log('***')
   return db;
 }
 
