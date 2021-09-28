@@ -2,7 +2,7 @@ import { h, Component } from "preact";
 import Form from "react-jsonschema-form";
 import {
   metaSchema, dbSchema, to_metadata_arrays, to_metadata_obj,
-  db_to_metadata_arrays, db_to_metadata_obj,
+  db_to_metadata_arrays, db_to_metadata_obj, array_to_obj, obj_to_array,
 } from "./schema.js";
 import {
   metaUiSchema, dbUiSchema
@@ -19,6 +19,7 @@ function getFormData(database_name) {
   if (!database_name || database_name === "global") {
     return to_metadata_arrays(JSON.parse(rawJSON))
   }
+  console.log(JSON.parse(rawJSON))
   const db_flat = db_to_metadata_arrays(JSON.parse(rawJSON))
   console.log('getFormData\'s db_flat is here')
   console.log(db_flat)

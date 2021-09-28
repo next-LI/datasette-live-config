@@ -172,7 +172,7 @@ export const tableSchema = {
     },
 
     "queries": {
-      "type": "object",
+      "type": "array",
       "title": "Canned queries",
       "items": querySchema,
     }
@@ -320,7 +320,7 @@ export function db_to_metadata_obj(db) {
  */
 export function to_metadata_obj(data) {
   /* clone the object, we're going to mutate it */
-  const metadata = Object.assign({}, data);
+  const metadata = Object.assign([], data);
 
   /**
    * Copy non databases keys over
@@ -440,4 +440,24 @@ export function to_metadata_arrays(metadata) {
   });
 
   return data;
+}
+
+
+/**
+ * Modified version of to_metadata_arrays for canned_queries
+ */
+export function array_to_obj(data) {
+  const metadata = {}
+  /* clone the object, we're going to mutate it */
+  Object.entries(data || {}).forEach(([key,value])=>{
+    metadata[value["_name"]] = value;
+  });
+
+  return metadata;
+}
+
+export function obj_to_array(data) {
+  const metadata = Object.entries(data).map((e) => ( e[1] ));
+
+  return metadata
 }
