@@ -273,15 +273,24 @@ export function db_to_metadata_obj(db) {
     kvtables[table_name] = table;
 
     const queries = table["queries"] || {};
-    queries.forEach((query) => {
-      let query_name = query["_name"];
+    console.log(table[queries])
+    Object.keys(queries).forEach((query_name) => {
+      console.log(queries)
+      // const query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
       console.log(query_name);
       // table["queries"][query_name] = query;
-      Object.assign(table['queries'], {query_name:query})
-      console.log("this should be k,v")
-      console.log(table)
+      Object.assign(table['queries'], {query_name:queries[query_name]})
     });
+    // queries.forEach((query) => {
+    //   let query_name = query["_name"];
+    //   if (!table["queries"]) table["queries"] = {};
+    //   console.log(query_name);
+    //   // table["queries"][query_name] = query;
+    //   Object.assign(table['queries'], {query_name:query})
+    //   console.log("this should be k,v")
+    //   console.log(table)
+    // });
 
     const units = table["units"] || [];
     units.forEach((unit) => {
