@@ -276,7 +276,9 @@ export function db_to_metadata_obj(db) {
       if (!table["queries"]) table["queries"] = {};
       console.log(query["_name"]);
       console.log(query_name);
+      console.log(query)
       table["queries"][query_name] = query;
+      console.log(table["queries"][query_name])
     });
 
     const units = table["units"] || [];
@@ -293,6 +295,7 @@ export function db_to_metadata_obj(db) {
   if (Object.keys(kvtables).length) {
     db["tables"] = kvtables;
   }
+  console.log(db)
   return db;
 }
 
