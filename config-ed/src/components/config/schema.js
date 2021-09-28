@@ -280,7 +280,7 @@ export function db_to_metadata_obj(db) {
       console.log(query_name);
       console.log(query)
       table["queries"][query_name] = query;
-      console.log(table["queries"][query_name])
+      console.log(table["queries"])
     });
 
     const units = table["units"] || [];
