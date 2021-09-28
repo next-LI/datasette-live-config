@@ -125,13 +125,19 @@ export default class App extends Component {
           onSubmit={(data, e) => {
             const copied_formData = Object.assign({},...data.formData);
             let metadata = null;
+            console.log('///')
             if (!props.database_name || props.database_name === "global") {
               metadata = to_metadata_obj(copied_formData);
+              console.log('this is metadata')
+              console.log(metadata)
             } else {
               metadata = db_to_metadata_obj(copied_formData);
+              console.log('this is not metadata, but table formdata')
+              console.log(metadata)
               // Name chaning is not supported currently
               delete metadata["_name"];
             }
+            console.log('///')
             this.handleSubmit(metadata, props.csrftoken, props.submit_url, props.database_name);
           }}
           onError={(data, e) => {

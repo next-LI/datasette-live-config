@@ -248,8 +248,8 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-  console.log('this is form to db')
   console.log('---')
+  console.log('this is form to db')
 
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
@@ -274,14 +274,13 @@ export function db_to_metadata_obj(db) {
 
     const queries = table["queries"] || [];
     queries.forEach((query) => {
-      const query_name = query["_name"];
+      let query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
-      console.log(query["_name"]);
-      table["queries"][query_name] = query;
+      console.log(query_name);
+      // table["queries"][query_name] = query;
       Object.assign(table['queries'], {query_name:query})
       console.log("this should be k,v")
       console.log(table)
-      console.log(table["queries"])
     });
 
     const units = table["units"] || [];
