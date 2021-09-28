@@ -277,9 +277,10 @@ export function db_to_metadata_obj(db) {
       const query_name = query["_name"];
       if (!table["queries"]) table["queries"] = {};
       console.log(query["_name"]);
-      console.log(query_name);
-      console.log(query)
       table["queries"][query_name] = query;
+      Object.assign(table['queries'], {query_name:query})
+      console.log("this should be k,v")
+      console.log(table)
       console.log(table["queries"])
     });
 
