@@ -249,7 +249,7 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-  console.log('initial db pre-submit', db)
+
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
       if (!db[key]) {
@@ -265,8 +265,8 @@ export function db_to_metadata_obj(db) {
   });
 
   const kvtables = {};
-
   const queries = {};
+  
   let temp_queries = db["queries"] || [];
   /* clone the object, we're going to mutate it */
   Object.entries(temp_queries || {}).forEach(([key,value])=>{
@@ -298,8 +298,6 @@ export function db_to_metadata_obj(db) {
     db["tables"] = kvtables;
   }
 
-  console.log('this is submission')
-  console.log(db)
   return db;
 }
 
@@ -360,9 +358,7 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
-  console.log('***')
-  console.log('this is getting the data from the db to config')
-  console.log(db)
+  
   Object.keys(tables).forEach((table_name) => {
     const table = tables[table_name];
     table["_name"] = table_name;
@@ -392,7 +388,7 @@ export function db_to_metadata_arrays(db) {
   if (flat_tables.length) {
     db["tables"] = flat_tables;
   }
-  console.log('***')
+  
   return db;
 }
 
