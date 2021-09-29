@@ -270,10 +270,8 @@ export function db_to_metadata_obj(db) {
   let temp_queries = db["queries"] || [];
   /* clone the object, we're going to mutate it */
   Object.entries(temp_queries || {}).forEach(([key,value])=>{
-    queries[value["_name"]] = value;
+    db['queries'][value["_name"]] = value;
   });
-
-  db['queries'] = queries;
 
   const tables = db["tables"] || [];
   tables.forEach((table) => {
@@ -291,10 +289,10 @@ export function db_to_metadata_obj(db) {
     let temp_units = table["units"] || [];
 
     Object.entries(temp_units || {}).forEach(([key,value])=>{
-      units[value["_name"]] = value;
+      console.log('this is temp unit', key, value)
+      if (!table["units"]) table["units"] = {};
+      table['units'][value["_name"]] = value;
     });
-  
-    table['units'] = units;
 
     // attach the table via key->value
     if (!db["tables"]) {
