@@ -366,17 +366,17 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
+  const queries = db["queries"] || {};
+
+  const flat_queries = Object.entries(queries).map((e) => ( e[1] ));    
+
+  if (flat_queries.length) {
+    db["queries"] = flat_queries;
+  }
   
   Object.keys(tables).forEach((table_name) => {
     const table = tables[table_name];
     table["_name"] = table_name;
-
-    const queries = table["queries"] || {};
-    const flat_queries = Object.entries(queries).map((e) => ( e[1] ));    
-
-    if (flat_queries.length) {
-      table["queries"] = flat_queries;
-    }
 
     // const flat_units = [];
     const units = table["units"] || {};
@@ -398,6 +398,7 @@ export function db_to_metadata_arrays(db) {
     db["tables"] = flat_tables;
   }
   
+  console.log('to form, processed', db)
   return db;
 }
 
