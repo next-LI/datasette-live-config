@@ -265,20 +265,23 @@ export function db_to_metadata_obj(db) {
   });
 
   const kvtables = {};
+
+  const queries = {};
+  let temp_queries = db["queries"] || [];
+  /* clone the object, we're going to mutate it */
+  Object.entries(temp_queries || {}).forEach(([key,value])=>{
+    queries[value["_name"]] = value;
+  });
+
+  db['queries'] = queries;
+
   const tables = db["tables"] || [];
   tables.forEach((table) => {
     const table_name = table["_name"];
     delete table["_name"];
     kvtables[table_name] = table;
 
-    const queries = {};
-    let temp_queries = table["queries"] || [];
-    /* clone the object, we're going to mutate it */
-    Object.entries(temp_queries || {}).forEach(([key,value])=>{
-      queries[value["_name"]] = value;
-    });
-
-    table['queries'] = queries;
+    
 
     const units = table["units"] || [];
     units.forEach((unit) => {

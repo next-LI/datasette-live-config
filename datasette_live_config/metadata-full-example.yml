@@ -37,7 +37,10 @@
           "license": "CC BY 3.0 US",
           "license_url": "https://creativecommons.org/licenses/by/3.0/us/",
           # canned queries
-          "queries": {
+          
+        }
+      },
+      "queries": {
             "canned query name": {
               # simple static SQL example
               "sql": "select column_name from table_name",
@@ -52,8 +55,6 @@
               "description": "Optional description of canned query"
             }
           }
-        }
-      }
     }
   }
 }
