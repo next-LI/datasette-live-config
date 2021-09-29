@@ -270,9 +270,10 @@ export function db_to_metadata_obj(db) {
     delete table["_name"];
     kvtables[table_name] = table;
 
-    const queries = table["queries"] || {};
+    const queries = {};
+    let temp_queries = table["queries"] || [];
     /* clone the object, we're going to mutate it */
-    Object.entries(queries || {}).forEach(([key,value])=>{
+    Object.entries(temp_queries || {}).forEach(([key,value])=>{
       queries[value["_name"]] = value;
     });
 
