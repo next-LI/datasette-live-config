@@ -273,15 +273,11 @@ export function db_to_metadata_obj(db) {
     kvtables[table_name] = table;
 
     const queries = table["queries"] || {};
-    console.log('276:', table[queries])
-    Object.keys(queries).forEach((query_name) => {
-      console.log('278', queries)
-      // const query_name = query["_name"];
-      if (!table["queries"]) table["queries"] = {};
-      console.log('281', query_name);
-      // table["queries"][query_name] = query;
-      Object.assign(table['queries'], {query_name:queries[query_name]})
+    /* clone the object, we're going to mutate it */
+    Object.entries(queries || {}).forEach(([key,value])=>{
+      queries[value["_name"]] = value;
     });
+
     // queries.forEach((query) => {
     //   let query_name = query["_name"];
     //   if (!table["queries"]) table["queries"] = {};
@@ -375,14 +371,16 @@ export function db_to_metadata_arrays(db) {
     const table = tables[table_name];
     table["_name"] = table_name;
 
-    const flat_queries = [];
+    // const flat_queries = [];
     const queries = table["queries"] || {};
-    Object.keys(queries).forEach((query_name) => {
-      console.log(query_name)
-      const query = queries[query_name];
-      query["_name"] = query_name;
-      flat_queries.push(query);
-    });
+    const flat_queries = Object.entries(queries).map((e) => ( e[1] ));
+    // Object.keys(queries).forEach((query_name) => {
+    //   console.log('query_name', query_name)
+    //   const query = queries[query_name];
+    //   query["_name"] = query_name;
+    //   flat_queries.push(query);
+    // });
+
     if (flat_queries.length) {
       table["queries"] = flat_queries;
     }
