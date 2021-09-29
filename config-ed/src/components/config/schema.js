@@ -249,7 +249,7 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-
+  console.log('preprocessed', db)
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
       if (!db[key]) {
@@ -281,13 +281,20 @@ export function db_to_metadata_obj(db) {
     delete table["_name"];
     kvtables[table_name] = table;
 
-    
+    // const units = table["units"] || [];
+    // units.forEach((unit) => {
+    //   if (!table["units"]) table["units"] = {};
+    //   table["units"][unit["_name"]] = unit["_value"];
+    // });
 
-    const units = table["units"] || [];
-    units.forEach((unit) => {
-      if (!table["units"]) table["units"] = {};
-      table["units"][unit["_name"]] = unit["_value"];
+    const units = {};
+    let temp_units = table["units"] || [];
+
+    Object.entries(temp_units || {}).forEach(([key,value])=>{
+      units[value["_name"]] = value;
     });
+  
+    table['units'] = units;
 
     // attach the table via key->value
     if (!db["tables"]) {
@@ -298,6 +305,7 @@ export function db_to_metadata_obj(db) {
     db["tables"] = kvtables;
   }
 
+  console.log('processed', db)
   return db;
 }
 
@@ -370,14 +378,15 @@ export function db_to_metadata_arrays(db) {
       table["queries"] = flat_queries;
     }
 
-    const flat_units = [];
+    // const flat_units = [];
     const units = table["units"] || {};
-    Object.keys(units).forEach((unit_name) => {
-      flat_units.push({
-        "_name": unit_name,
-        "_value": units[unit_name],
-      });
-    });
+    // Object.keys(units).forEach((unit_name) => {
+    //   flat_units.push({
+    //     "_name": unit_name,
+    //     "_value": units[unit_name],
+    //   });
+    // });
+    const flat_units = Object.entries(units).map((e) => ( e[1] ));    
     if (flat_units.length) {
       table["units"] = flat_units;
     }
