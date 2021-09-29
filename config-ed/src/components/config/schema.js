@@ -291,6 +291,8 @@ export function db_to_metadata_obj(db) {
     db["tables"] = kvtables;
   }
 
+  console.log('this is submission')
+  console.log(db)
   return db;
 }
 
