@@ -171,11 +171,7 @@ export const tableSchema = {
       "items": unitSchema
     },
 
-    "queries": {
-      "type": "array",
-      "title": "Canned queries",
-      "items": querySchema,
-    }
+
   },
   //"required": ["_name"],
 };
@@ -218,6 +214,11 @@ export const dbSchema = {
       "type": "array",
       "items": tableSchema
     },
+    "queries": {
+      "type": "array",
+      "title": "Canned queries",
+      "items": querySchema,
+    }
   },
   //"required": ["_name"],
 };
