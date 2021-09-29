@@ -248,8 +248,6 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-  console.log('---')
-  console.log('this is form to db')
 
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
@@ -278,16 +276,6 @@ export function db_to_metadata_obj(db) {
       queries[value["_name"]] = value;
     });
 
-    // queries.forEach((query) => {
-    //   let query_name = query["_name"];
-    //   if (!table["queries"]) table["queries"] = {};
-    //   console.log(query_name);
-    //   // table["queries"][query_name] = query;
-    //   Object.assign(table['queries'], {query_name:query})
-    //   console.log("this should be k,v")
-    //   console.log(table)
-    // });
-
     const units = table["units"] || [];
     units.forEach((unit) => {
       if (!table["units"]) table["units"] = {};
@@ -302,8 +290,7 @@ export function db_to_metadata_obj(db) {
   if (Object.keys(kvtables).length) {
     db["tables"] = kvtables;
   }
-  console.log(db)
-  console.log('---')
+
   return db;
 }
 
@@ -364,22 +351,15 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
-  console.log('this is getting the data from the db to config')
   console.log('***')
+  console.log('this is getting the data from the db to config')
   console.log(db)
   Object.keys(tables).forEach((table_name) => {
     const table = tables[table_name];
     table["_name"] = table_name;
 
-    // const flat_queries = [];
     const queries = table["queries"] || {};
-    const flat_queries = Object.entries(queries).map((e) => ( e[1] ));
-    // Object.keys(queries).forEach((query_name) => {
-    //   console.log('query_name', query_name)
-    //   const query = queries[query_name];
-    //   query["_name"] = query_name;
-    //   flat_queries.push(query);
-    // });
+    const flat_queries = Object.entries(queries).map((e) => ( e[1] ));    
 
     if (flat_queries.length) {
       table["queries"] = flat_queries;
@@ -438,24 +418,4 @@ export function to_metadata_arrays(metadata) {
   });
 
   return data;
-}
-
-
-/**
- * Modified version of to_metadata_arrays for canned_queries
- */
-export function array_to_obj(data) {
-  const metadata = {}
-  /* clone the object, we're going to mutate it */
-  Object.entries(data || {}).forEach(([key,value])=>{
-    metadata[value["_name"]] = value;
-  });
-
-  return metadata;
-}
-
-export function obj_to_array(data) {
-  const metadata = Object.entries(data).map((e) => ( e[1] ));
-
-  return metadata
 }

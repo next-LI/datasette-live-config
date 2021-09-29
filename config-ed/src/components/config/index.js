@@ -2,7 +2,7 @@ import { h, Component } from "preact";
 import Form from "react-jsonschema-form";
 import {
   metaSchema, dbSchema, to_metadata_arrays, to_metadata_obj,
-  db_to_metadata_arrays, db_to_metadata_obj, array_to_obj, obj_to_array,
+  db_to_metadata_arrays, db_to_metadata_obj, 
 } from "./schema.js";
 import {
   metaUiSchema, dbUiSchema
@@ -19,10 +19,7 @@ function getFormData(database_name) {
   if (!database_name || database_name === "global") {
     return to_metadata_arrays(JSON.parse(rawJSON))
   }
-  console.log(JSON.parse(rawJSON))
   const db_flat = db_to_metadata_arrays(JSON.parse(rawJSON))
-  console.log('getFormData\'s db_flat is here')
-  console.log(db_flat)
   db_flat["_name"] = database_name;
   return db_flat;
 }
@@ -129,19 +126,13 @@ export default class App extends Component {
           onSubmit={(data, e) => {
             const copied_formData = Object.assign({},...data.formData);
             let metadata = null;
-            console.log('///')
             if (!props.database_name || props.database_name === "global") {
               metadata = to_metadata_obj(copied_formData);
-              console.log('this is metadata')
-              console.log(metadata)
             } else {
               metadata = db_to_metadata_obj(copied_formData);
-              console.log('this is not metadata, but table formdata')
-              console.log(metadata)
               // Name chaning is not supported currently
               delete metadata["_name"];
             }
-            console.log('///')
             this.handleSubmit(metadata, props.csrftoken, props.submit_url, props.database_name);
           }}
           onError={(data, e) => {
