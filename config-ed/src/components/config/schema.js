@@ -248,7 +248,7 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-
+  console.log('initial db pre-submit', db)
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
       if (!db[key]) {
