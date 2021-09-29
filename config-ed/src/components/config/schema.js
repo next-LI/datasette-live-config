@@ -294,7 +294,7 @@ export function db_to_metadata_obj(db) {
     Object.entries(temp_units || {}).forEach(([key,value])=>{
       console.log('this is temp unit', key, value)
       if (!table["units"]) table["units"] = {};
-      temp_units[value["_name"]] = value;
+      temp_units[value["_name"]] = value["_value"];
     });
   
     table['units'] = units;
