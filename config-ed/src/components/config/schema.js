@@ -369,7 +369,7 @@ export function db_to_metadata_arrays(db) {
   });
 
   const tables = db["tables"] || {};
-  const queries = db["queries"] || {};
+  const queries = db["queries"] || [];
 
   const flat_queries = Object.entries(queries).map((e) => ( e[1] ));    
 
@@ -382,7 +382,7 @@ export function db_to_metadata_arrays(db) {
     table["_name"] = table_name;
 
     // const flat_units = [];
-    const units = table["units"] || {};
+    const units = table["units"] || [];
     // Object.keys(units).forEach((unit_name) => {
     //   flat_units.push({
     //     "_name": unit_name,
