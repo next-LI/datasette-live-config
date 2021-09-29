@@ -277,6 +277,8 @@ export function db_to_metadata_obj(db) {
       queries[value["_name"]] = value;
     });
 
+    table['queries'] = queries;
+
     const units = table["units"] || [];
     units.forEach((unit) => {
       if (!table["units"]) table["units"] = {};
