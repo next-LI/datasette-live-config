@@ -15,11 +15,14 @@ import {
 function getFormData(database_name) {
   
   const rawJSON = document.getElementById('config-data').innerHTML;
+  
   // This is key-value, as expected by datasette
   if (!database_name || database_name === "global") {
     return to_metadata_arrays(JSON.parse(rawJSON))
   }
+
   const db_flat = db_to_metadata_arrays(JSON.parse(rawJSON))
+
   db_flat["_name"] = database_name;
   return db_flat;
 }
@@ -125,6 +128,7 @@ export default class App extends Component {
           formData={formData}
           onSubmit={(data, e) => {
             const copied_formData = Object.assign({},...data.formData);
+            
             let metadata = null;
             if (!props.database_name || props.database_name === "global") {
               metadata = to_metadata_obj(copied_formData);

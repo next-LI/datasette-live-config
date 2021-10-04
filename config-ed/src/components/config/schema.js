@@ -249,7 +249,7 @@ export const metaSchema = {
 
 export function db_to_metadata_obj(db) {
   delete db["_name"];
-  console.log('preprocessed', db)
+  
   Object.keys(db || {}).forEach((key) => {
     if (key === "allow" || key === "allow_sql") {
       if (!db[key]) {
@@ -265,16 +265,19 @@ export function db_to_metadata_obj(db) {
   });
 
   const kvtables = {};
-  const queries = {};
+  const temp_queries = {};
   
-  let temp_queries = db["queries"] || [];
+  const queries = db["queries"] || [];
   /* clone the object, we're going to mutate it */
-  Object.entries(temp_queries || {}).forEach(([key,value])=>{
-    if (!db["queries"]) db["queries"] = {};
-    queries[value["_name"]] = value;
+  Object.entries(queries || {}).forEach(([key,value])=>{
+    temp_queries[value["_name"]] = value;
   });
 
-  db['queries'] = queries;
+  if (Object.keys(temp_queries).length) {
+    db['queries'] = temp_queries;
+  }
+
+
 
   const tables = db["tables"] || [];
   tables.forEach((table) => {
@@ -282,22 +285,16 @@ export function db_to_metadata_obj(db) {
     delete table["_name"];
     kvtables[table_name] = table;
 
-    // const units = table["units"] || [];
-    // units.forEach((unit) => {
-    //   if (!table["units"]) table["units"] = {};
-    //   table["units"][unit["_name"]] = unit["_value"];
-    // });
+    const temp_units = {};
+    let units = table["units"] || [];
 
-    const units = {};
-    let temp_units = table["units"] || [];
-
-    Object.entries(temp_units || {}).forEach(([key,value])=>{
-      console.log('this is temp unit', key, value)
-      if (!table["units"]) table["units"] = {};
+    Object.entries(units || {}).forEach(([key,value])=>{
+      // if (!table["units"]) table["units"] = {};
       temp_units[value["_name"]] = value["_value"];
     });
-  
-    table['units'] = units;
+    if (Object.keys(temp_units).length) {
+      table['units'] = temp_units;
+    }
 
     // attach the table via key->value
     if (!db["tables"]) {
@@ -308,7 +305,6 @@ export function db_to_metadata_obj(db) {
     db["tables"] = kvtables;
   }
 
-  console.log('processed', db)
   return db;
 }
 
@@ -370,9 +366,9 @@ export function db_to_metadata_arrays(db) {
 
   const tables = db["tables"] || {};
   const queries = db["queries"] || [];
-
   const flat_queries = Object.entries(queries).map((e) => ( e[1] ));    
 
+  
   if (flat_queries.length) {
     db["queries"] = flat_queries;
   }
@@ -381,15 +377,15 @@ export function db_to_metadata_arrays(db) {
     const table = tables[table_name];
     table["_name"] = table_name;
 
-    // const flat_units = [];
+    const flat_units = [];
     const units = table["units"] || [];
-    // Object.keys(units).forEach((unit_name) => {
-    //   flat_units.push({
-    //     "_name": unit_name,
-    //     "_value": units[unit_name],
-    //   });
-    // });
-    const flat_units = Object.entries(units).map((e) => ( e[1] ));    
+    Object.keys(units).forEach((unit_name) => {
+      flat_units.push({
+        "_name": unit_name,
+        "_value": units[unit_name],
+      });
+    });    
+    
     if (flat_units.length) {
       table["units"] = flat_units;
     }
@@ -401,7 +397,6 @@ export function db_to_metadata_arrays(db) {
     db["tables"] = flat_tables;
   }
   
-  console.log('to form, processed', db)
   return db;
 }
 
